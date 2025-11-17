@@ -51,28 +51,30 @@ export function Projects() {
             return (
               <AnimateOnScroll key={project.id} delay={index * 100}>
                 <Card className="flex h-full flex-col overflow-hidden">
-                  {image && (
-                    <Image
-                      src={image.imageUrl}
-                      alt={project.title}
-                      data-ai-hint={image.imageHint}
-                      width={600}
-                      height={400}
-                      className="h-48 w-full object-cover"
-                    />
-                  )}
-                  <CardHeader>
+                  <CardHeader className="items-center text-center">
+                    {image && (
+                      <div className="mb-4 rounded-full bg-gradient-to-tr from-primary/20 to-secondary/20 p-1.5">
+                        <Image
+                          src={image.imageUrl}
+                          alt={project.title}
+                          data-ai-hint={image.imageHint}
+                          width={128}
+                          height={128}
+                          className="h-32 w-32 rounded-full object-cover shadow-lg"
+                        />
+                      </div>
+                    )}
                     <CardTitle>{project.title}</CardTitle>
                     <CardDescription>{project.description}</CardDescription>
                   </CardHeader>
                   <CardContent className="flex-grow">
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap justify-center gap-2">
                       {project.technologies.map(tech => (
                         <Badge key={tech} variant="secondary">{tech}</Badge>
                       ))}
                     </div>
                   </CardContent>
-                  <CardFooter className="space-x-4">
+                  <CardFooter className="justify-center space-x-4">
                     <Button asChild>
                       <Link href={project.liveLink} target="_blank">Live Demo</Link>
                     </Button>
