@@ -28,6 +28,7 @@ const skillCategories = [
       { name: 'Git', icon: <SkillIcons.Git className="h-8 w-8 object-contain" /> },
       { name: 'Webpack', icon: <SkillIcons.Webpack className="h-8 w-8 object-contain" /> },
       { name: 'Figma', icon: <SkillIcons.Figma className="h-8 w-8 object-contain" /> },
+      { name: 'Adobe XD', icon: <SkillIcons.AdobeXD className="h-8 w-8 object-contain" /> },
       { name: 'REST APIs', icon: <SkillIcons.RestAPI className="h-8 w-8 object-contain" /> },
       { name: 'WordPress', icon: <SkillIcons.WordPress className="h-8 w-8 object-contain" /> },
     ],

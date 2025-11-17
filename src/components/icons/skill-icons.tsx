@@ -57,4 +57,8 @@ const WordPress = (props: { className?: string }) => (
     <Image src="https://static.vecteezy.com/system/resources/previews/020/975/579/non_2x/wordpress-logo-wordpress-icon-transparent-free-png.png" alt="WordPress logo" width={32} height={32} {...props} />
 );
 
-export const SkillIcons = { HTML5, CSS3, JavaScript, React: ReactLogo, VueJS, NodeJS, Python, PHP, SQL, Git, Webpack, Figma, RestAPI, WordPress };
+const AdobeXD = (props: { className?: string }) => (
+    <Image src="https://cdn.iconscout.com/icon/free/png-256/free-adobe-xd-file-icon-svg-download-png-3516530.png" alt="Adobe XD logo" width={32} height={32} {...props} />
+);
+
+export const SkillIcons = { HTML5, CSS3, JavaScript, React: ReactLogo, VueJS, NodeJS, Python, PHP, SQL, Git, Webpack, Figma, RestAPI, WordPress, AdobeXD };

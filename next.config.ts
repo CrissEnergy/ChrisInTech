@@ -87,6 +87,12 @@ const nextConfig: NextConfig = {
         hostname: 'intrastage.com',
         port: '',
         pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn.iconscout.com',
+        port: '',
+        pathname: '/**',
       }
     ],
   },
