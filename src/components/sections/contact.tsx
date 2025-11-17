@@ -56,7 +56,7 @@ export function Contact() {
   }, [state, form, toast]);
 
   return (
-    <section id="contact" className="w-full bg-card py-20 lg:py-32">
+    <section id="contact" className="w-full bg-transparent py-20 lg:py-32">
       <AnimateOnScroll className="container mx-auto max-w-3xl px-4 md:px-6">
         <div className="space-y-8 text-center">
           <div className="space-y-2">

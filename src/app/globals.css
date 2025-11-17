@@ -8,25 +8,25 @@
   }
 
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222 47% 11%;
-    --card: 222 47% 95%;
-    --card-foreground: 222 47% 11%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
-    --primary: 14 90% 55%; /* Orange */
-    --primary-foreground: 0 0% 100%;
-    --secondary: 0 84% 60%; /* Red */
-    --secondary-foreground: 0 0% 100%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
+    --background: 224 71% 4%;
+    --foreground: 210 40% 98%;
+    --card: 224 71% 4%;
+    --card-foreground: 210 40% 98%;
+    --popover: 224 71% 4%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217 91% 60%; /* Bright Blue */
+    --primary-foreground: 210 40% 98%;
+    --secondary: 258 91% 60%; /* Vibrant Purple */
+    --secondary-foreground: 210 40% 98%;
+    --muted: 215 28% 17%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 215 28% 17%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 63% 31%;
     --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 47.4% 11.2%;
+    --border: 215 28% 17%;
+    --input: 215 28% 17%;
+    --ring: 217 91% 60%;
     --radius: 1rem;
   }
 }
@@ -37,70 +37,39 @@
   }
   body {
     @apply bg-background text-foreground relative overflow-x-hidden;
+    background-image: url('https://images.unsplash.com/photo-1571171637578-41bc2dd41cd2?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTJ8fHdlYiUyMGRldmVsb3BtZW50fGVufDB8fDB8fHww');
+    background-attachment: fixed;
+    background-size: cover;
+    background-position: center;
   }
   
-  body::before,
-  body::after {
+  body::before {
     content: '';
     position: fixed;
-    border-radius: 50%;
-    filter: blur(150px);
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(5, 10, 25, 0.8);
+    backdrop-filter: blur(4px);
     z-index: -1;
-    opacity: 0.15;
-    pointer-events: none;
-  }
-
-  body::before {
-    width: 400px;
-    height: 400px;
-    background-color: hsl(var(--primary));
-    top: -100px;
-    right: -100px;
-    animation: pulse-orange 12s infinite alternate;
-  }
-
-  body::after {
-    width: 500px;
-    height: 500px;
-    background-color: hsl(var(--secondary));
-    bottom: -150px;
-    left: -150px;
-    animation: pulse-red 15s infinite alternate;
-  }
-
-  @keyframes pulse-orange {
-    from {
-      transform: scale(0.8) translate(20px, -20px);
-    }
-    to {
-      transform: scale(1.2) translate(-20px, 20px);
-    }
-  }
-
-  @keyframes pulse-red {
-    from {
-      transform: scale(1.2) translate(-20px, 20px);
-    }
-    to {
-      transform: scale(0.8) translate(20px, -20px);
-    }
   }
 }
 
 @layer components {
   .glass-card {
-    @apply relative bg-white/40 backdrop-blur-lg border border-black/10 rounded-2xl transition-all duration-300;
+    @apply relative bg-slate-900/40 backdrop-blur-lg border border-white/10 rounded-2xl transition-all duration-300;
   }
 
   .glass-card:hover {
     transform: translateY(-8px);
-    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.2), 0 8px 10px -6px rgb(0 0 0 / 0.2);
   }
 
   .glass-card::before {
     content: '';
     @apply absolute inset-0 rounded-2xl p-px;
-    background: linear-gradient(135deg, hsl(var(--primary) / 0.2), hsl(var(--secondary) / 0.2));
+    background: linear-gradient(135deg, hsl(var(--primary) / 0.3), hsl(var(--secondary) / 0.3));
     mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
@@ -117,6 +86,6 @@
      @apply bg-primary/80 backdrop-blur-md border border-white/10 text-primary-foreground shadow-lg transition-all duration-300 hover:bg-primary/90 hover:shadow-primary/20 focus:ring-2 focus:ring-ring;
   }
    .glass-input {
-    @apply bg-black/5 backdrop-blur-md border border-black/10 rounded-md text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:border-ring;
+    @apply bg-black/20 backdrop-blur-md border border-white/10 rounded-md text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:border-ring;
   }
 }

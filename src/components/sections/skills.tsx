@@ -57,7 +57,7 @@ export function Skills() {
                 <CardContent>
                   <div className="grid grid-cols-2 gap-4">
                     {category.skills.map(skill => (
-                      <div key={skill.name} className="flex flex-col items-center justify-center space-y-2 rounded-lg bg-background p-4 transition-colors hover:bg-secondary">
+                      <div key={skill.name} className="flex flex-col items-center justify-center space-y-2 rounded-lg bg-background p-4 transition-transform hover:scale-105 hover:bg-accent">
                         {skill.icon}
                         <span className="text-sm font-medium text-foreground/80">{skill.name}</span>
                       </div>
