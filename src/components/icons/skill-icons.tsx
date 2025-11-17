@@ -10,7 +10,7 @@ const CSS3 = (props: { className?: string }) => (
 );
 
 const JavaScript = (props: { className?: string }) => (
-  <Image src="https://static.vecteezy.com/system/resources/previews/027/127/463/non_2x/javascript-logo-javascript-icon-transparent-free-png.png" alt="JavaScript logo" width={32} height={32} {...props} />
+  <Image src="https://1000logos.net/wp-content/uploads/2020/09/JavaScript-Logo.png" alt="JavaScript logo" width={32} height={32} {...props} />
 );
 
 const ReactLogo = (props: SVGProps<SVGSVGElement>) => (
@@ -54,7 +54,7 @@ const RestAPI = (props: { className?: string }) => (
 );
 
 const WordPress = (props: { className?: string }) => (
-    <Image src="https://static.vecteezy.com/system/resources/previews/020/975/579/non_2x/wordpress-logo-wordpress-icon-transparent-free-png.png" alt="WordPress logo" width={32} height={32} {...props} />
+    <Image src="https://cdn-icons-png.flaticon.com/512/174/174881.png" alt="WordPress logo" width={32} height={32} {...props} />
 );
 
 const AdobeXD = (props: { className?: string }) => (

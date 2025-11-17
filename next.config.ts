@@ -93,6 +93,12 @@ const nextConfig: NextConfig = {
         hostname: 'cdn.iconscout.com',
         port: '',
         pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: '1000logos.net',
+        port: '',
+        pathname: '/**',
       }
     ],
   },
