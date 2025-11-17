@@ -2,10 +2,12 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
 import { Whatsapp } from '@/components/icons/whatsapp-icon';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 const navItems = [
   { href: '#home', label: 'Home' },
@@ -18,12 +20,13 @@ const navItems = [
 
 export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const logo = PlaceHolderImages.find(p => p.id === 'site-logo');
 
   return (
     <header className="sticky top-4 z-50 mx-auto w-[calc(100%-2rem)] max-w-7xl rounded-2xl border border-black/10 bg-white/50 backdrop-blur-xl transition-all duration-300">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <Link href="#home" className="text-xl font-bold text-primary">
-          Chris In Tech.
+        <Link href="#home" className="flex items-center gap-2 text-xl font-bold text-primary">
+          {logo && <Image src={logo.imageUrl} alt={logo.description} width={150} height={40} />}
         </Link>
         <nav className="hidden items-center md:flex">
           <ul className="flex items-center space-x-6">
@@ -58,7 +61,7 @@ export function Header() {
               <div className="flex h-full flex-col">
                 <div className="flex items-center justify-between border-b pb-4">
                    <Link href="#home" className="text-xl font-bold text-primary" onClick={() => setIsMobileMenuOpen(false)}>
-                    Chris In Tech.
+                     {logo && <Image src={logo.imageUrl} alt={logo.description} width={150} height={40} />}
                   </Link>
                   <SheetClose asChild>
                     <Button variant="ghost" size="icon">
