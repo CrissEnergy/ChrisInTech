@@ -48,7 +48,7 @@ export function Contact() {
       <AnimateOnScroll className="container mx-auto max-w-3xl px-4 md:px-6">
         <div className="space-y-8 text-center">
           <div className="space-y-2">
-            <h2 className="text-3xl font-bold tracking-tighter text-primary sm:text-4xl md:text-5xl">
+            <h2 className="text-3xl font-bold tracking-tighter text-foreground sm:text-4xl md:text-5xl">
               Get In Touch
             </h2>
             <p className="text-foreground/80">

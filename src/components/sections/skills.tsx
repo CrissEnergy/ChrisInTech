@@ -53,7 +53,7 @@ export function Skills() {
     <section id="skills" className="w-full py-20 lg:py-32">
       <AnimateOnScroll className="container mx-auto px-4 md:px-6">
         <div className="mb-12 text-center">
-          <h2 className="text-3xl font-bold tracking-tighter text-primary sm:text-4xl md:text-5xl">
+          <h2 className="text-3xl font-bold tracking-tighter text-foreground sm:text-4xl md:text-5xl">
             My Skills
           </h2>
           <p className="mx-auto mt-4 max-w-[700px] text-foreground/80 md:text-xl">
