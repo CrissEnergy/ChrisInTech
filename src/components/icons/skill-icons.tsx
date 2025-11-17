@@ -69,5 +69,9 @@ const Firebase = (props: { className?: string }) => (
     <Image src="https://brandlogos.net/wp-content/uploads/2025/03/firebase_icon-logo_brandlogos.net_tcvck-512x646.png" alt="Firebase logo" width={32} height={32} {...props} />
 );
 
+const NextJS = (props: { className?: string }) => (
+    <Image src="https://images.icon-icons.com/2148/PNG/512/nextjs_icon_132160.png" alt="Next.js logo" width={32} height={32} {...props} />
+);
 
-export const SkillIcons = { HTML5, CSS3, JavaScript, React: ReactLogo, VueJS, NodeJS, Python, PHP, SQL, Git, Webpack, Figma, RestAPI, WordPress, AdobeXD, Supabase, Firebase };
+
+export const SkillIcons = { HTML5, CSS3, JavaScript, React: ReactLogo, VueJS, NodeJS, Python, PHP, SQL, Git, Webpack, Figma, RestAPI, WordPress, AdobeXD, Supabase, Firebase, NextJS };

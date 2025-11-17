@@ -11,6 +11,7 @@ const skillCategories = [
       { name: 'JavaScript', icon: <SkillIcons.JavaScript className="h-8 w-8 object-contain" /> },
       { name: 'React', icon: <SkillIcons.React className="h-8 w-8" /> },
       { name: 'Vue.js', icon: <SkillIcons.VueJS className="h-8 w-8 object-contain" /> },
+      { name: 'Next.js', icon: <SkillIcons.NextJS className="h-8 w-8 object-contain" /> },
     ],
   },
   {
