@@ -69,6 +69,24 @@ const nextConfig: NextConfig = {
         hostname: 'icons.veryicon.com',
         port: '',
         pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn.freebiesupply.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'webpack.js.org',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'intrastage.com',
+        port: '',
+        pathname: '/**',
       }
     ],
   },
