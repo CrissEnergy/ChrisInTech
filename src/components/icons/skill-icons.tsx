@@ -1,39 +1,40 @@
 import type { SVGProps } from 'react';
+import Image from 'next/image';
 
-const HTML5 = (props: SVGProps<SVGSVGElement>) => (
-  <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M1.5 0h21l-1.91 21.563L11.977 24l-8.565-2.438L1.5 0zm17.09 4.413L5.41 4.41l.213 2.622 10.125.002-.255 2.716h-6.64l.24 2.573h6.182l-.36 3.52-2.6.7-.002.002-2.596-.7-.18-.82h-2.58l.33 1.48 4.03 1.075.002.001 4.02-1.076.39-3.978.253-2.793.214-2.333.23-2.622z" /></svg>
+const HTML5 = (props: { className?: string }) => (
+  <Image src="https://cdn0.iconfinder.com/data/icons/social-network-9/50/22-512.png" alt="HTML5 logo" width={32} height={32} {...props} />
 );
 
-const CSS3 = (props: SVGProps<SVGSVGElement>) => (
-  <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M1.5 0h21l-1.91 21.563L11.977 24l-8.565-2.438L1.5 0zm17.09 4.413L5.41 4.41l.213 2.622 10.125.002-.255 2.716h-6.64l.24 2.573h6.182l-.36 3.52-2.6.7-.002.002-2.596-.7-.18-.82h-2.58l.33 1.48 4.03 1.075.002.001 4.02-1.076.39-3.978.253-2.793.214-2.333.23-2.622z" /></svg>
+const CSS3 = (props: { className?: string }) => (
+  <Image src="https://cdn-icons-png.flaticon.com/512/919/919826.png" alt="CSS3 logo" width={32} height={32} {...props} />
 );
 
-const JavaScript = (props: SVGProps<SVGSVGElement>) => (
-  <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M0 0h24v24H0V0zm22.034 18.276c.583.734.253 1.48-.622 1.48h-1.326c-.56 0-.832-.303-.993-.684a5.21 5.21 0 0 1-1.505-2.573c-.45-.968-.86-1.943-1.325-2.912-.522-1.075-.992-2.01-1.527-2.912-.132-.23-.27-.453-.408-.684-.173-.284-.34-.56-.508-.839-.15-.253-.267-.407-.267-.532 0-.106.066-.205.197-.29h1.69c.56 0 .813.253.95.532.228.43.394.86.583 1.28.328.712.68 1.42.99 2.132.338.76.669 1.52.99 2.28.066.15.14.3.23.45.1.13.23.23.4.23h.14c.24 0 .42-.09.52-.27.1-.18.15-.36.15-.56a.91.91 0 0 0-.05-.28l-1.32-2.53a15.42 15.42 0 0 1-.58-1.28c-.14-.3-.24-.55-.24-.8 0-.25.09-.48.28-.68.18-.2.43-.3.73-.3h1.76c.58 0 .84.28.84.58 0 .19-.05.38-.15.58-.1.2-.23.38-.38.58-.15.2-.33.4-.53.59-.2.2-.4.38-.63.58l-1.35 2.63a5.2 5.2 0 0 0-.58 1.29c-.04.14-.04.28-.04.42 0 .33.15.58.45.73.3.15.65.23 1.03.23.35 0 .68-.05.99-.15.3-.1.58-.22.83-.37zm-10.05-4.52c.633.78 1.44 1.25 2.41 1.25.86 0 1.5-.27 1.9-.8.42-.52.63-1.17.63-1.95 0-.7-.2-1.3-.62-1.8-.4-.5-.95-.75-1.65-.75-.76 0-1.4.27-1.9.8-.52.53-.78 1.18-.78 1.95 0 .73.23 1.34.6 1.8zM12 24C5.373 24 0 18.627 0 12S5.373 0 12 0s12 5.373 12 12-5.373 12-12 12zm-1.97-14.73c.4-.53.9-.8 1.5-.8s1.1.27 1.5.8c.4.53.6 1.18.6 1.95s-.2 1.42-.6 1.95c-.4.53-.9.8-1.5.8s-1.1-.27-1.5-.8c-.4-.53-.6-1.18-.6-1.95s.2-1.42.6-1.95z" /></svg>
+const JavaScript = (props: { className?: string }) => (
+  <Image src="https://static.vecteezy.com/system/resources/previews/027/127/560/non_2x/javascript-logo-javascript-icon-transparent-free-png.png" alt="JavaScript logo" width={32} height={32} {...props} />
 );
 
 const ReactLogo = (props: SVGProps<SVGSVGElement>) => (
   <svg viewBox="-11.5 -10.23174 23 20.46348" fill="currentColor" {...props}><title>React Logo</title><circle cx="0" cy="0" r="2.05" fill="#61dafb"/><g stroke="#61dafb" strokeWidth="1" fill="none"><ellipse rx="11" ry="4.2"/><ellipse rx="11" ry="4.2" transform="rotate(60)"/><ellipse rx="11" ry="4.2" transform="rotate(120)"/></g></svg>
 );
 
-const VueJS = (props: SVGProps<SVGSVGElement>) => (
-  <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M24 1.61h-9.405l-2.595 4.5h5.19L12 13.01 6.81 6.11h5.19L9.405 1.61H0l12 20.78L24 1.61z"/><path d="M19.19 1.61H14.81L12 6.11l-2.81-4.5H4.81L12 13.01l7.19-11.4z" /></svg>
+const VueJS = (props: { className?: string }) => (
+  <Image src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Vue.js_Logo_2.svg/1200px-Vue.js_Logo_2.svg.png" alt="Vue.js logo" width={32} height={32} {...props} />
 );
 
-const NodeJS = (props: SVGProps<SVGSVGElement>) => (
-  <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M11.75 1.312l-6.23 3.6c-.46.265-.456.635.008.897l.383.22c.46.262.92.26.92-.22l.004-3.598 5.303 3.062V1.522a.44.44 0 0 0-.38-.429zM12.246.883a.88.88 0 0 0-.492.12L5.52 4.601a.874.874 0 0 0-.442.766v7.262a.88.88 0 0 0 .438.764l6.238 3.598c.46.265.92.265.92-.158V1.52a.88.88 0 0 0-.872-.638zm-1.313 18.065l-4.473-2.583v-5.16l4.473 2.58v5.163zm.875-10.74l-4.48-2.584 2.11-1.218 4.48 2.583-2.11 1.219zm5.328-3.072l.38-.22c.465-.262.465-.632.004-.897l-6.23-3.6a.88.88 0 0 0-.964-.004l-6.23 3.6a.874.874 0 0 0-.442.765v7.262a.88.88 0 0 0 .438.764l6.238 3.6a.88.88 0 0 0 .968-.002l6.23-3.6a.874.874 0 0 0 .442-.765V8.134a.44.44 0 0 0-.458-.45z" /></svg>
+const NodeJS = (props: { className?: string }) => (
+  <Image src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d9/Node.js_logo.svg/2560px-Node.js_logo.svg.png" alt="Node.js logo" width={32} height={32} {...props} />
 );
 
-const Python = (props: SVGProps<SVGSVGElement>) => (
-  <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M11.726 1.332C10.023 1.332 8.65 2.705 8.65 4.408v2.673H5.977A2.673 2.673 0 0 0 3.304 9.754v1.336A2.673 2.673 0 0 0 5.977 13.763h2.673v5.829a2.673 2.673 0 0 0 2.673 2.673h2.674c1.703 0 3.076-1.373 3.076-3.076V19.19a4.01 4.01 0 1 0-8.02 0v.004a4.01 4.01 0 0 0-4.01-4.01V9.754a4.01 4.01 0 0 0 4.01-4.01h.003a4.01 4.01 0 1 0 0-8.02h-.003zm0 2.674a1.336 1.336 0 1 1 0 2.673 1.336 1.336 0 0 1 0-2.673zm0 16.035a1.336 1.336 0 1 1 0 2.673 1.336 1.336 0 0 1 0-2.673z" /></svg>
+const Python = (props: { className?: string }) => (
+  <Image src="https://images.icon-icons.com/112/PNG/512/python_18894.png" alt="Python logo" width={32} height={32} {...props} />
 );
 
-const PHP = (props: SVGProps<SVGSVGElement>) => (
-  <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M12 1.333a9.728 9.728 0 0 0-9.722 9.723A9.728 9.728 0 0 0 12 20.778a9.728 9.728 0 0 0 9.722-9.722A9.728 9.728 0 0 0 12 1.333zm0 1.63a8.093 8.093 0 0 1 8.09 8.093 8.093 8.093 0 0 1-8.09 8.093A8.093 8.093 0 0 1 3.91 11.056a8.093 8.093 0 0 1 8.09-8.093zm-3.236 3.267v8.1h1.63V9.756h1.63a2.44 2.44 0 1 0 0-4.88h-3.26zm1.63 1.63v1.63h1.63a.81.81 0 1 1 0-1.63h-1.63zm3.268 0v8.1h1.63V9.756h1.63a2.44 2.44 0 1 0 0-4.88h-3.26zm1.63 1.63v1.63h1.63a.81.81 0 1 1 0-1.63h-1.63z" /></svg>
+const PHP = (props: { className?: string }) => (
+  <Image src="https://cdn-icons-png.flaticon.com/512/919/919830.png" alt="PHP logo" width={32} height={32} {...props} />
 );
 
-const SQL = (props: SVGProps<SVGSVGElement>) => (
-  <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M12.0001 0C8.3496 0 5.0931 1.7011 3.0131 4.5001V1.35C3.0131 .675.4631 0 2.6631 0S2.2501.675 2.2501 1.35V7.5C2.2501 8.175.4631 8.625 2.6631 8.625h6.15c.675 0 1.275-.525 1.275-1.2s-.6-1.2-1.275-1.2H4.9546c1.5135-2.2605 3.987-3.75 6.9735-3.75 4.575 0 8.25 3.675 8.25 8.25s-3.675 8.25-8.25 8.25c-2.7 0-5.1-1.275-6.6-3.375l-1.95 1.2C5.4131 20.949 8.5631 22.5 12.0001 22.5c5.775 0 10.5-4.725 10.5-10.5S17.7751 0 12.0001 0zm-2.25 15.6l-3.3-3.3.9-.9 2.4 2.4 4.95-4.95.9.9-5.85 5.85z" /></svg>
+const SQL = (props: { className?: string }) => (
+  <Image src="https://icons.veryicon.com/png/o/application/designer-icon/sql-5.png" alt="SQL logo" width={32} height={32} {...props} />
 );
 
 const Git = (props: SVGProps<SVGSVGElement>) => (
@@ -59,5 +60,3 @@ const WordPress = (props: SVGProps<SVGSVGElement>) => (
 );
 
 export const SkillIcons = { HTML5, CSS3, JavaScript, React: ReactLogo, VueJS, NodeJS, Python, PHP, SQL, Git, Webpack, Figma, RestAPI, WordPress };
-
-    

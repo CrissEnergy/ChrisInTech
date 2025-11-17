@@ -6,20 +6,20 @@ const skillCategories = [
   {
     title: 'Frontend',
     skills: [
-      { name: 'HTML5', icon: <SkillIcons.HTML5 className="h-8 w-8" /> },
-      { name: 'CSS3', icon: <SkillIcons.CSS3 className="h-8 w-8" /> },
-      { name: 'JavaScript', icon: <SkillIcons.JavaScript className="h-8 w-8" /> },
+      { name: 'HTML5', icon: <SkillIcons.HTML5 className="h-8 w-8 object-contain" /> },
+      { name: 'CSS3', icon: <SkillIcons.CSS3 className="h-8 w-8 object-contain" /> },
+      { name: 'JavaScript', icon: <SkillIcons.JavaScript className="h-8 w-8 object-contain" /> },
       { name: 'React', icon: <SkillIcons.React className="h-8 w-8" /> },
-      { name: 'Vue.js', icon: <SkillIcons.VueJS className="h-8 w-8" /> },
+      { name: 'Vue.js', icon: <SkillIcons.VueJS className="h-8 w-8 object-contain" /> },
     ],
   },
   {
     title: 'Backend',
     skills: [
-      { name: 'Node.js', icon: <SkillIcons.NodeJS className="h-8 w-8" /> },
-      { name: 'Python', icon: <SkillIcons.Python className="h-8 w-8" /> },
-      { name: 'PHP', icon: <SkillIcons.PHP className="h-8 w-8" /> },
-      { name: 'SQL', icon: <SkillIcons.SQL className="h-8 w-8" /> },
+      { name: 'Node.js', icon: <SkillIcons.NodeJS className="h-8 w-8 object-contain" /> },
+      { name: 'Python', icon: <SkillIcons.Python className="h-8 w-8 object-contain" /> },
+      { name: 'PHP', icon: <SkillIcons.PHP className="h-8 w-8 object-contain" /> },
+      { name: 'SQL', icon: <SkillIcons.SQL className="h-8 w-8 object-contain" /> },
     ],
   },
   {
