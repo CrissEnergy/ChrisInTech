@@ -29,6 +29,7 @@ const skillCategories = [
       { name: 'Webpack', icon: <SkillIcons.Webpack className="h-8 w-8" /> },
       { name: 'Figma', icon: <SkillIcons.Figma className="h-8 w-8" /> },
       { name: 'REST APIs', icon: <SkillIcons.RestAPI className="h-8 w-8" /> },
+      { name: 'WordPress', icon: <SkillIcons.WordPress className="h-8 w-8" /> },
     ],
   },
 ];
@@ -42,7 +43,7 @@ export function Skills() {
             My Skills
           </h2>
           <p className="mx-auto mt-4 max-w-[700px] text-foreground/80 md:text-xl">
-            Technologies I&apos;m proficient with and use in my projects.
+            Technologies I'm proficient with and use in my projects.
           </p>
         </div>
         <div className="grid gap-8 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">

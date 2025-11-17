@@ -54,6 +54,10 @@ const RestAPI = (props: SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
-export const SkillIcons = { HTML5, CSS3, JavaScript, React: ReactLogo, VueJS, NodeJS, Python, PHP, SQL, Git, Webpack, Figma, RestAPI };
+const WordPress = (props: SVGProps<SVGSVGElement>) => (
+    <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M20.182 8.448c-1.956-3.424-5.28-5.6-8.862-5.6-2.92 0-5.74 1.488-7.53 3.936L12 21.132l8.182-12.684zm-8.226 9.936c-2.52-.3-4.584-2.58-4.584-5.232 0-1.044.312-2.016.864-2.832l-3.336-5.16c-2.46 2.832-2.856 6.888-.936 10.128 1.92 3.24 5.232 5.256 8.868 5.256.072 0 .144 0 .216 0l2.352-11.412-3.444 9.252zM0 12c0-1.08.168-2.136.48-3.144L5.652 19.5c-.3.264-.624.504-.96.72-1.392.888-3.024 1.344-4.692 1.344C0 21.564 0 12 0 12zm8.59-8.4c-.048 0-.096.024-.144.024-3.552 0-6.72 2.016-8.304 5.088l6.384 9.912L13.116 0c-1.44-.384-3- R.6-4.524-.6z"/></svg>
+);
+
+export const SkillIcons = { HTML5, CSS3, JavaScript, React: ReactLogo, VueJS, NodeJS, Python, PHP, SQL, Git, Webpack, Figma, RestAPI, WordPress };
 
     
