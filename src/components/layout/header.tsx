@@ -86,12 +86,6 @@ export function Header() {
                         </SheetClose>
                       </li>
                     ))}
-                    <li>
-                      <Link href="https://wa.me/message/RYP5SWAHLLZZD1" target="_blank" className="flex items-center text-lg font-medium text-foreground transition-colors hover:text-primary">
-                        <Whatsapp className="mr-2 h-6 w-6" />
-                        WhatsApp
-                      </Link>
-                    </li>
                   </ul>
                 </nav>
               </div>
