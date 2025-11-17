@@ -42,7 +42,7 @@ export function Projects() {
             My Projects
           </h2>
           <p className="mx-auto mt-4 max-w-[700px] text-foreground/80 md:text-xl">
-            Here are a few projects I&apos;ve worked on recently.
+            Here are a few projects I've worked on recently.
           </p>
         </div>
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
@@ -50,7 +50,7 @@ export function Projects() {
             const image = PlaceHolderImages.find(p => p.id === project.id);
             return (
               <AnimateOnScroll key={project.id} delay={index * 100}>
-                <Card className="flex h-full flex-col overflow-hidden transition-transform duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-primary/10">
+                <Card className="flex h-full flex-col overflow-hidden">
                   {image && (
                     <Image
                       src={image.imageUrl}
