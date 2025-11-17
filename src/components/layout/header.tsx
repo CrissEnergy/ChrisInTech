@@ -40,7 +40,7 @@ export function Header() {
           </ul>
           <div className="ml-6">
              <Button variant="ghost" size="icon" asChild>
-                <Link href="#" target="_blank" aria-label="WhatsApp">
+                <Link href="https://wa.me/message/RYP5SWAHLLZZD1" target="_blank" aria-label="WhatsApp">
                   <Whatsapp className="h-6 w-6 text-foreground/80 transition-colors hover:text-primary" />
                 </Link>
               </Button>
@@ -82,7 +82,7 @@ export function Header() {
                       </li>
                     ))}
                     <li>
-                      <Link href="#" target="_blank" className="flex items-center text-lg font-medium text-foreground transition-colors hover:text-primary">
+                      <Link href="https://wa.me/message/RYP5SWAHLLZZD1" target="_blank" className="flex items-center text-lg font-medium text-foreground transition-colors hover:text-primary">
                         <Whatsapp className="mr-2 h-6 w-6" />
                         WhatsApp
                       </Link>
