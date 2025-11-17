@@ -18,7 +18,7 @@ export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-    <header className="sticky top-4 z-50 mx-auto w-[calc(100%-2rem)] max-w-7xl rounded-2xl border border-white/10 bg-background/50 backdrop-blur-xl transition-all duration-300">
+    <header className="sticky top-4 z-50 mx-auto w-[calc(100%-2rem)] max-w-7xl rounded-2xl border border-black/10 bg-white/50 backdrop-blur-xl transition-all duration-300">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <Link href="#home" className="text-xl font-bold text-primary">
           Chris In Tech.

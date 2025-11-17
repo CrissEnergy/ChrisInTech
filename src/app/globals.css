@@ -8,48 +8,26 @@
   }
 
   :root {
-    --background: 220 40% 5%;
-    --foreground: 210 40% 98%;
-    --card: 220 40% 10%;
-    --card-foreground: 210 40% 98%;
-    --popover: 220 40% 5%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 25 95% 55%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 0 84% 60%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 25 95% 55%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 63% 31%;
+    --background: 0 0% 100%;
+    --foreground: 222 47% 11%;
+    --card: 222 47% 95%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 14 90% 55%; /* Orange */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 84% 60%; /* Red */
+    --secondary-foreground: 0 0% 100%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-    --border: 217 33% 27%;
-    --input: 217 33% 17%;
-    --ring: 25 95% 55%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 47.4% 11.2%;
     --radius: 1rem;
-  }
-
-  .dark {
-    --background: 220 40% 5%;
-    --foreground: 210 40% 98%;
-    --card: 220 40% 10%;
-    --card-foreground: 210 40% 98%;
-    --popover: 220 40% 5%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 25 95% 55%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 0 84% 60%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 25 95% 55%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217 33% 27%;
-    --input: 217 33% 17%;
-    --ring: 25 95% 55%;
   }
 }
 
@@ -64,12 +42,12 @@
 
 @layer components {
   .glass-card {
-    @apply bg-card/40 backdrop-blur-lg border border-white/10 rounded-2xl transition-all duration-300;
+    @apply bg-white/40 backdrop-blur-lg border border-black/10 rounded-2xl transition-all duration-300;
   }
   .glass-button {
      @apply bg-primary/80 backdrop-blur-md border border-white/10 text-primary-foreground shadow-lg transition-all duration-300 hover:bg-primary/90 hover:shadow-primary/20 focus:ring-2 focus:ring-ring;
   }
    .glass-input {
-    @apply bg-white/5 backdrop-blur-md border border-white/10 rounded-md text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:border-ring;
+    @apply bg-black/5 backdrop-blur-md border border-black/10 rounded-md text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:border-ring;
   }
 }
