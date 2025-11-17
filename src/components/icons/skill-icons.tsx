@@ -55,3 +55,5 @@ const RestAPI = (props: SVGProps<SVGSVGElement>) => (
 );
 
 export const SkillIcons = { HTML5, CSS3, JavaScript, React: ReactLogo, VueJS, NodeJS, Python, PHP, SQL, Git, Webpack, Figma, RestAPI };
+
+    
