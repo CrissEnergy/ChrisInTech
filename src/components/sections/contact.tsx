@@ -2,8 +2,8 @@
 
 import { Github, Linkedin, Twitter } from 'lucide-react';
 import Link from 'next/link';
-import { useFormState, useFormStatus } from 'react-dom';
-import { useEffect } from 'react';
+import { useFormStatus } from 'react-dom';
+import { useActionState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { submitContactForm, type FormState } from '@/app/actions';
 import { Input } from '@/components/ui/input';
@@ -30,7 +30,7 @@ function SubmitButton() {
 
 export function Contact() {
   const initialState: FormState = { message: '', success: false };
-  const [state, formAction] = useFormState(submitContactForm, initialState);
+  const [state, formAction] = useActionState(submitContactForm, initialState);
   const { toast } = useToast();
 
   useEffect(() => {
