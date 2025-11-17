@@ -49,7 +49,12 @@ export function Header() {
               </Button>
           </div>
         </nav>
-        <div className="md:hidden">
+        <div className="flex items-center gap-2 md:hidden">
+           <Button variant="ghost" size="icon" asChild>
+              <Link href="https://wa.me/message/RYP5SWAHLLZZD1" target="_blank" aria-label="WhatsApp">
+                <Whatsapp className="h-6 w-6 text-foreground/80 transition-colors hover:text-primary" />
+              </Link>
+            </Button>
           <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon">
