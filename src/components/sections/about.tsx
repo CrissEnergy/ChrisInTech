@@ -10,7 +10,7 @@ export function About() {
       <AnimateOnScroll className="container mx-auto px-4 md:px-6">
         <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
           <div className="space-y-4">
-            <h2 className="text-3xl font-bold tracking-tighter text-primary sm:text-4xl md:text-5xl">
+            <h2 className="text-3xl font-bold tracking-tighter text-foreground sm:text-4xl md:text-5xl">
               About Me
             </h2>
             <p className="max-w-[600px] text-foreground/80 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
