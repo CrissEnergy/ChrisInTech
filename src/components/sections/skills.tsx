@@ -31,6 +31,8 @@ const skillCategories = [
       { name: 'Adobe XD', icon: <SkillIcons.AdobeXD className="h-8 w-8 object-contain" /> },
       { name: 'REST APIs', icon: <SkillIcons.RestAPI className="h-8 w-8 object-contain" /> },
       { name: 'WordPress', icon: <SkillIcons.WordPress className="h-8 w-8 object-contain" /> },
+      { name: 'Supabase', icon: <SkillIcons.Supabase className="h-8 w-8 object-contain" /> },
+      { name: 'Firebase', icon: <SkillIcons.Firebase className="h-8 w-8 object-contain" /> },
     ],
   },
 ];

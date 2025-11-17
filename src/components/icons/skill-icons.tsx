@@ -61,4 +61,13 @@ const AdobeXD = (props: { className?: string }) => (
     <Image src="https://cdn.iconscout.com/icon/free/png-256/free-adobe-xd-file-icon-svg-download-png-3516530.png" alt="Adobe XD logo" width={32} height={32} {...props} />
 );
 
-export const SkillIcons = { HTML5, CSS3, JavaScript, React: ReactLogo, VueJS, NodeJS, Python, PHP, SQL, Git, Webpack, Figma, RestAPI, WordPress, AdobeXD };
+const Supabase = (props: { className?: string }) => (
+    <Image src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/supabase.webp" alt="Supabase logo" width={32} height={32} {...props} />
+);
+
+const Firebase = (props: { className?: string }) => (
+    <Image src="https://brandlogos.net/wp-content/uploads/2025/03/firebase_icon-logo_brandlogos.net_tcvck-512x646.png" alt="Firebase logo" width={32} height={32} {...props} />
+);
+
+
+export const SkillIcons = { HTML5, CSS3, JavaScript, React: ReactLogo, VueJS, NodeJS, Python, PHP, SQL, Git, Webpack, Figma, RestAPI, WordPress, AdobeXD, Supabase, Firebase };
