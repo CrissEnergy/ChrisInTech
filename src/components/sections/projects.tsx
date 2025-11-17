@@ -78,7 +78,7 @@ export function Projects() {
                     <Button asChild>
                       <Link href={project.liveLink} target="_blank">Live Demo</Link>
                     </Button>
-                    <Button variant="secondary" asChild>
+                    <Button variant="outline" asChild>
                       <Link href={project.githubLink} target="_blank">GitHub</Link>
                     </Button>
                   </CardFooter>
