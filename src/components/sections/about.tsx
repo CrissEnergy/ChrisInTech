@@ -6,7 +6,7 @@ export function About() {
   const headshot = PlaceHolderImages.find(p => p.id === 'chris-headshot');
 
   return (
-    <section id="about" className="w-full bg-card py-20 lg:py-32">
+    <section id="about" className="w-full py-20 lg:py-32">
       <AnimateOnScroll className="container mx-auto px-4 md:px-6">
         <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
           <div className="space-y-4">
@@ -19,14 +19,16 @@ export function About() {
           </div>
           <div className="flex justify-center">
             {headshot && (
-              <Image
-                src={headshot.imageUrl}
-                alt={headshot.description}
-                data-ai-hint={headshot.imageHint}
-                width={400}
-                height={400}
-                className="rounded-full object-cover shadow-2xl"
-              />
+              <div className="p-1.5 bg-gradient-to-tr from-primary to-secondary rounded-full">
+                <Image
+                  src={headshot.imageUrl}
+                  alt={headshot.description}
+                  data-ai-hint={headshot.imageHint}
+                  width={400}
+                  height={400}
+                  className="rounded-full object-cover shadow-2xl"
+                />
+              </div>
             )}
           </div>
         </div>

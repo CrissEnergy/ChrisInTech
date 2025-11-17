@@ -18,8 +18,8 @@ export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
+    <header className="sticky top-4 z-50 mx-auto w-[calc(100%-2rem)] max-w-7xl rounded-2xl border border-white/10 bg-background/50 backdrop-blur-xl transition-all duration-300">
+      <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <Link href="#home" className="text-xl font-bold text-primary">
           Chris In Tech.
         </Link>
@@ -45,7 +45,7 @@ export function Header() {
                 <span className="sr-only">Open menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="right">
+            <SheetContent side="right" className="bg-background/80 backdrop-blur-xl">
               <div className="flex h-full flex-col">
                 <div className="flex items-center justify-between border-b pb-4">
                    <Link href="#home" className="text-xl font-bold text-primary" onClick={() => setIsMobileMenuOpen(false)}>
