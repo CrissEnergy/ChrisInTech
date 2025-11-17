@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from '@/components/ui/sheet';
 import { Whatsapp } from '@/components/icons/whatsapp-icon';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 
@@ -58,18 +58,20 @@ export function Header() {
               </Button>
             </SheetTrigger>
             <SheetContent side="right" className="bg-background/80 backdrop-blur-xl">
-              <div className="flex h-full flex-col">
-                <div className="flex items-center justify-between border-b pb-4">
-                   <Link href="#home" className="text-xl font-bold text-primary" onClick={() => setIsMobileMenuOpen(false)}>
-                     {logo && <Image src={logo.imageUrl} alt={logo.description} width={150} height={40} />}
-                  </Link>
+               <SheetHeader className="flex-row items-center justify-between border-b pb-4">
+                  <SheetTitle>
+                    <Link href="#home" className="text-xl font-bold text-primary" onClick={() => setIsMobileMenuOpen(false)}>
+                      {logo && <Image src={logo.imageUrl} alt={logo.description} width={150} height={40} />}
+                    </Link>
+                  </SheetTitle>
                   <SheetClose asChild>
                     <Button variant="ghost" size="icon">
                       <X className="h-6 w-6" />
                       <span className="sr-only">Close menu</span>
                     </Button>
                   </SheetClose>
-                </div>
+                </SheetHeader>
+              <div className="flex h-full flex-col">
                 <nav className="mt-8">
                   <ul className="flex flex-col items-start space-y-6">
                     {navItems.map((item) => (
