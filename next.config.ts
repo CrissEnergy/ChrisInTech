@@ -117,6 +117,18 @@ const nextConfig: NextConfig = {
         hostname: 'brandlogos.net',
         port: '',
         pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.rensvandeschoot.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.uc3m.es',
+        port: '',
+        pathname: '/**',
       }
     ],
   },

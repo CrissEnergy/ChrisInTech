@@ -73,5 +73,21 @@ const NextJS = (props: { className?: string }) => (
     <Image src="https://images.icon-icons.com/2148/PNG/512/nextjs_icon_132160.png" alt="Next.js logo" width={32} height={32} {...props} />
 );
 
+const RLogo = (props: { className?: string }) => (
+    <Image src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/R_logo.svg/724px-R_logo.svg.png" alt="R logo" width={32} height={32} {...props} />
+);
 
-export const SkillIcons = { HTML5, CSS3, JavaScript, React: ReactLogo, VueJS, NodeJS, Python, PHP, SQL, Git, Webpack, Figma, RestAPI, WordPress, AdobeXD, Supabase, Firebase, NextJS };
+const Stata = (props: { className?: string }) => (
+    <Image src="https://upload.wikimedia.org/wikipedia/commons/7/79/Stata_logo_med_blue.png" alt="Stata logo" width={32} height={32} {...props} />
+);
+
+const Spss = (props: { className?: string }) => (
+    <Image src="https://www.rensvandeschoot.com/wp-content/uploads/2019/01/spss-1-logo-png-transparent.png" alt="SPSS logo" width={32} height={32} {...props} />
+);
+
+const EViews = (props: { className?: string }) => (
+    <Image src="https://www.uc3m.es/sdic/media/sdic/img/mediana/original/en-im_eviews---icono_38540.../im_eviews---icono.png" alt="EViews logo" width={32} height={32} {...props} />
+);
+
+
+export const SkillIcons = { HTML5, CSS3, JavaScript, React: ReactLogo, VueJS, NodeJS, Python, PHP, SQL, Git, Webpack, Figma, RestAPI, WordPress, AdobeXD, Supabase, Firebase, NextJS, R: RLogo, Stata, Spss, EViews };

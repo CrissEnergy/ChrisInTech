@@ -36,6 +36,16 @@ const skillCategories = [
       { name: 'Firebase', icon: <SkillIcons.Firebase className="h-8 w-8 object-contain" /> },
     ],
   },
+  {
+    title: 'Data Analysis',
+    skills: [
+        { name: 'Python', icon: <SkillIcons.Python className="h-8 w-8 object-contain" /> },
+        { name: 'R', icon: <SkillIcons.R className="h-8 w-8 object-contain" /> },
+        { name: 'Stata', icon: <SkillIcons.Stata className="h-8 w-8 object-contain" /> },
+        { name: 'Spss', icon: <SkillIcons.Spss className="h-8 w-8 object-contain" /> },
+        { name: 'EViews', icon: <SkillIcons.EViews className="h-8 w-8 object-contain" /> },
+    ],
+  },
 ];
 
 export function Skills() {
@@ -50,7 +60,7 @@ export function Skills() {
             Technologies I'm proficient with and use in my projects.
           </p>
         </div>
-        <div className="grid gap-8 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-8 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
           {skillCategories.map((category, index) => (
             <AnimateOnScroll key={category.title} delay={index * 100}>
               <Card className="h-full">
