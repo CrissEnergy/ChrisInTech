@@ -2,8 +2,15 @@
 
 import { Github, Linkedin, Twitter } from 'lucide-react';
 import Link from 'next/link';
+import { useFormState, useFormStatus } from 'react-dom';
+import { useEffect } from 'react';
+import { useToast } from '@/hooks/use-toast';
+import { submitContactForm, type FormState } from '@/app/actions';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { AnimateOnScroll } from '@/components/animate-on-scroll';
+import { Label } from '@/components/ui/label';
 
 const socialLinks = [
   { icon: Github, href: '#', 'aria-label': 'GitHub profile' },
@@ -11,8 +18,30 @@ const socialLinks = [
   { icon: Twitter, href: '#', 'aria-label': 'Twitter profile' },
 ];
 
+function SubmitButton() {
+  const { pending } = useFormStatus();
+
+  return (
+    <Button type="submit" disabled={pending} size="lg">
+      {pending ? 'Sending...' : 'Send Message'}
+    </Button>
+  );
+}
+
 export function Contact() {
-  const recipientEmail = 'owusubusiness1@gmail.com';
+  const initialState: FormState = { message: '', success: false };
+  const [state, formAction] = useFormState(submitContactForm, initialState);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (state.message) {
+      toast({
+        title: state.success ? 'Success!' : 'Uh oh!',
+        description: state.message,
+        variant: state.success ? 'default' : 'destructive',
+      });
+    }
+  }, [state, toast]);
 
   return (
     <section id="contact" className="w-full bg-transparent py-20 lg:py-32">
@@ -26,13 +55,35 @@ export function Contact() {
               Have a question or want to work together? Send me a message!
             </p>
           </div>
-          <div className="text-center">
-            <Button asChild size="lg">
-              <Link href={`mailto:${recipientEmail}`}>
-                Send Message
-              </Link>
-            </Button>
-          </div>
+
+          <form action={formAction} className="space-y-6 text-left">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="name">Name</Label>
+                <Input id="name" name="name" placeholder="Your name" required />
+                {state.errors?.name && (
+                  <p className="text-sm text-destructive">{state.errors.name.join(', ')}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input id="email" name="email" type="email" placeholder="Your email" required />
+                 {state.errors?.email && (
+                  <p className="text-sm text-destructive">{state.errors.email.join(', ')}</p>
+                )}
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="message">Message</Label>
+              <Textarea id="message" name="message" placeholder="Your message" required />
+               {state.errors?.message && (
+                  <p className="text-sm text-destructive">{state.errors.message.join(', ')}</p>
+                )}
+            </div>
+            <div className="text-center">
+              <SubmitButton />
+            </div>
+          </form>
 
           <div className="flex justify-center space-x-4 pt-4">
             {socialLinks.map((link, index) => (
