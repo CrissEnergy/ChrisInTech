@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
+import { Whatsapp } from '@/components/icons/whatsapp-icon';
 
 const navItems = [
   { href: '#home', label: 'Home' },
@@ -24,7 +25,7 @@ export function Header() {
         <Link href="#home" className="text-xl font-bold text-primary">
           Chris In Tech.
         </Link>
-        <nav className="hidden md:flex">
+        <nav className="hidden items-center md:flex">
           <ul className="flex items-center space-x-6">
             {navItems.map((item) => (
               <li key={item.label}>
@@ -37,6 +38,13 @@ export function Header() {
               </li>
             ))}
           </ul>
+          <div className="ml-6">
+             <Button variant="ghost" size="icon" asChild>
+                <Link href="#" target="_blank" aria-label="WhatsApp">
+                  <Whatsapp className="h-6 w-6 text-foreground/80 transition-colors hover:text-primary" />
+                </Link>
+              </Button>
+          </div>
         </nav>
         <div className="md:hidden">
           <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
@@ -73,6 +81,12 @@ export function Header() {
                         </SheetClose>
                       </li>
                     ))}
+                    <li>
+                      <Link href="#" target="_blank" className="flex items-center text-lg font-medium text-foreground transition-colors hover:text-primary">
+                        <Whatsapp className="mr-2 h-6 w-6" />
+                        WhatsApp
+                      </Link>
+                    </li>
                   </ul>
                 </nav>
               </div>
