@@ -2,8 +2,8 @@
 
 import { Github, Linkedin, Twitter } from 'lucide-react';
 import Link from 'next/link';
-import { useFormStatus } from 'react-dom';
 import { useActionState, useEffect } from 'react';
+import { useFormStatus } from 'react-dom';
 import { useToast } from '@/hooks/use-toast';
 import { submitContactForm, type FormState } from '@/app/actions';
 import { Input } from '@/components/ui/input';
