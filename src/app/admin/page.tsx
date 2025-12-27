@@ -4,15 +4,12 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { MoreHorizontal, PlusCircle } from 'lucide-react';
-import { collection, doc } from 'firebase/firestore';
+import { collection, doc, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import {
   useFirebase,
   useCollection,
-  useMemoFirebase,
-  addDocumentNonBlocking,
-  updateDocumentNonBlocking,
-  deleteDocumentNonBlocking,
+  useMemoFirebase
 } from '@/firebase';
 
 import { Badge } from '@/components/ui/badge';
@@ -51,6 +48,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import type { Project } from '@/lib/mock-data';
 import { getStorage } from 'firebase/storage';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 const technologyCategories = [
     {
@@ -90,6 +89,7 @@ export default function AdminDashboard() {
   const [selectedTechnologies, setSelectedTechnologies] = useState<string[]>([]);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -135,40 +135,72 @@ export default function AdminDashboard() {
 
   const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!firestore || !storage) return;
+    if (!firestore || !storage || isSubmitting) return;
 
+    setIsSubmitting(true);
     let imageUrl = currentProject?.imageUrl || `https://picsum.photos/seed/${Date.now()}/400/300`;
 
-    if (imageFile) {
-        const imageRef = ref(storage, `projects/${Date.now()}_${imageFile.name}`);
-        await uploadBytes(imageRef, imageFile);
-        imageUrl = await getDownloadURL(imageRef);
+    try {
+        if (imageFile) {
+            const imageRef = ref(storage, `projects/${Date.now()}_${imageFile.name}`);
+            await uploadBytes(imageRef, imageFile);
+            imageUrl = await getDownloadURL(imageRef);
+        }
+
+        const formData = new FormData(e.currentTarget);
+        const projectData = {
+          title: formData.get('title') as string,
+          description: formData.get('description') as string,
+          technologies: selectedTechnologies,
+          liveLink: formData.get('liveLink') as string,
+          githubLink: formData.get('githubLink') as string,
+          imageUrl: imageUrl,
+        };
+
+        if (currentProject) {
+          // Update project
+          const projectRef = doc(firestore, 'projects', currentProject.id);
+          updateDoc(projectRef, projectData)
+            .then(() => {
+              toast({ title: 'Project Updated', description: `${projectData.title} has been successfully updated.` });
+            })
+            .catch(error => {
+              errorEmitter.emit(
+                'permission-error',
+                new FirestorePermissionError({
+                  path: projectRef.path,
+                  operation: 'update',
+                  requestResourceData: projectData,
+                })
+              )
+            });
+        } else {
+          // Add new project
+          const projectsColRef = collection(firestore, 'projects');
+          addDoc(projectsColRef, projectData)
+            .then(() => {
+              toast({ title: 'Project Added', description: `${projectData.title} has been successfully added.` });
+            })
+            .catch(error => {
+              errorEmitter.emit(
+                'permission-error',
+                new FirestorePermissionError({
+                  path: projectsColRef.path,
+                  operation: 'create',
+                  requestResourceData: projectData,
+                })
+              )
+            });
+        }
+
+        setIsDialogOpen(false);
+        setCurrentProject(null);
+    } catch (error) {
+        console.error("Error submitting form:", error);
+        toast({ title: 'Submission Error', description: 'Could not save the project. Please try again.', variant: 'destructive'});
+    } finally {
+        setIsSubmitting(false);
     }
-
-    const formData = new FormData(e.currentTarget);
-    const projectData = {
-      title: formData.get('title') as string,
-      description: formData.get('description') as string,
-      technologies: selectedTechnologies,
-      liveLink: formData.get('liveLink') as string,
-      githubLink: formData.get('githubLink') as string,
-      imageUrl: imageUrl,
-    };
-
-    if (currentProject) {
-      // Update project
-      const projectRef = doc(firestore, 'projects', currentProject.id);
-      updateDocumentNonBlocking(projectRef, projectData);
-      toast({ title: 'Project Updated', description: `${projectData.title} has been successfully updated.` });
-    } else {
-      // Add new project
-      const projectsColRef = collection(firestore, 'projects');
-      addDocumentNonBlocking(projectsColRef, projectData);
-      toast({ title: 'Project Added', description: `${projectData.title} has been successfully added.` });
-    }
-
-    setIsDialogOpen(false);
-    setCurrentProject(null);
   };
 
   const openAddDialog = () => {
@@ -189,10 +221,21 @@ export default function AdminDashboard() {
   const handleDeleteProject = () => {
     if (projectToDelete && firestore) {
       const projectRef = doc(firestore, 'projects', projectToDelete.id);
-      deleteDocumentNonBlocking(projectRef);
-      toast({ title: 'Project Deleted', description: `${projectToDelete.title} has been removed.`, variant: 'destructive' });
-      setIsDeleteDialogOpen(false);
-      setProjectToDelete(null);
+      deleteDoc(projectRef)
+        .then(() => {
+          toast({ title: 'Project Deleted', description: `${projectToDelete.title} has been removed.`, variant: 'destructive' });
+          setIsDeleteDialogOpen(false);
+          setProjectToDelete(null);
+        })
+        .catch(error => {
+            errorEmitter.emit(
+                'permission-error',
+                new FirestorePermissionError({
+                  path: projectRef.path,
+                  operation: 'delete',
+                })
+            );
+        });
     }
   };
 
@@ -305,13 +348,13 @@ export default function AdminDashboard() {
       {/* Add/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={(isOpen) => { setIsDialogOpen(isOpen); if (!isOpen) setCurrentProject(null); }}>
         <DialogContent className="sm:max-w-2xl">
-          <form onSubmit={handleFormSubmit}>
-            <DialogHeader>
+           <DialogHeader>
               <DialogTitle>{currentProject ? 'Edit Project' : 'Add New Project'}</DialogTitle>
               <DialogDescription>
                 {currentProject ? 'Update the details of your project.' : 'Fill in the details for your new project.'}
               </DialogDescription>
             </DialogHeader>
+          <form onSubmit={handleFormSubmit}>
             <ScrollArea className="max-h-[60vh] p-4">
               <div className="grid gap-6 py-4">
                 <div className="space-y-2">
@@ -368,11 +411,13 @@ export default function AdminDashboard() {
 
               </div>
             </ScrollArea>
-            <DialogFooter>
+            <DialogFooter className="pt-4">
               <DialogClose asChild>
-                <Button type="button" variant="secondary">Cancel</Button>
+                <Button type="button" variant="secondary" disabled={isSubmitting}>Cancel</Button>
               </DialogClose>
-              <Button type="submit">{currentProject ? 'Save Changes' : 'Add Project'}</Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Saving...' : (currentProject ? 'Save Changes' : 'Add Project')}
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -401,3 +446,5 @@ export default function AdminDashboard() {
     </>
   );
 }
+
+    
