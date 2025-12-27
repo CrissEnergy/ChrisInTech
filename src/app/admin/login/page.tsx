@@ -27,6 +27,37 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('signin');
 
+  const handleAuthError = (error: any, title: string) => {
+    let errorMessage = 'An unexpected error occurred.';
+    if (error.code) {
+      switch (error.code) {
+        case 'auth/user-not-found':
+        case 'auth/invalid-credential':
+          errorMessage = 'No account found with this email and password combination. Please try again or sign up.';
+          break;
+        case 'auth/wrong-password':
+          errorMessage = 'Incorrect password. Please try again.';
+          break;
+        case 'auth/email-already-in-use':
+          errorMessage = 'This email is already in use. Please sign in.';
+          break;
+        case 'auth/weak-password':
+          errorMessage = 'The password is too weak. Please use at least 6 characters.';
+          break;
+        case 'auth/invalid-email':
+          errorMessage = 'Please enter a valid email address.';
+          break;
+        default:
+          errorMessage = error.message;
+      }
+    }
+    toast({
+      variant: 'destructive',
+      title: title,
+      description: errorMessage,
+    });
+  }
+
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!auth) {
@@ -65,36 +96,6 @@ export default function LoginPage() {
     }
   };
 
-  const handleAuthError = (error: any, title: string) => {
-    let errorMessage = 'An unexpected error occurred.';
-    if (error.code) {
-      switch (error.code) {
-        case 'auth/user-not-found':
-        case 'auth/invalid-credential':
-          errorMessage = 'No account found with this email and password combination. Please try again or sign up.';
-          break;
-        case 'auth/wrong-password':
-          errorMessage = 'Incorrect password. Please try again.';
-          break;
-        case 'auth/email-already-in-use':
-          errorMessage = 'This email is already in use. Please sign in.';
-          break;
-        case 'auth/weak-password':
-          errorMessage = 'The password is too weak. Please use at least 6 characters.';
-          break;
-        case 'auth/invalid-email':
-          errorMessage = 'Please enter a valid email address.';
-          break;
-        default:
-          errorMessage = error.message;
-      }
-    }
-    toast({
-      variant: 'destructive',
-      title: title,
-      description: errorMessage,
-    });
-  }
 
   return (
     <div className="flex min-h-dvh items-center justify-center bg-background p-4">
@@ -137,7 +138,7 @@ export default function LoginPage() {
                   />
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? 'Processing...' : 'Sign In'}
+                  {isLoading && activeTab === 'signin' ? 'Processing...' : 'Sign In'}
                 </Button>
               </form>
             </CardContent>
@@ -175,7 +176,7 @@ export default function LoginPage() {
                   />
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? 'Processing...' : 'Sign Up'}
+                  {isLoading && activeTab === 'signup' ? 'Processing...' : 'Sign Up'}
                 </Button>
               </form>
             </CardContent>
