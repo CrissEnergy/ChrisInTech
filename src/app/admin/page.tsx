@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { MoreHorizontal, PlusCircle, Upload } from 'lucide-react';
+import { MoreHorizontal, PlusCircle } from 'lucide-react';
 import { collection, doc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import {
@@ -47,6 +47,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import type { Project } from '@/lib/mock-data';
 import { getStorage } from 'firebase/storage';
@@ -311,60 +312,62 @@ export default function AdminDashboard() {
                 {currentProject ? 'Update the details of your project.' : 'Fill in the details for your new project.'}
               </DialogDescription>
             </DialogHeader>
-            <div className="grid gap-6 py-4">
-               <div className="space-y-2">
-                  <Label htmlFor="title">Title</Label>
-                  <Input id="title" name="title" defaultValue={currentProject?.title} required />
-              </div>
-               <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea id="description" name="description" defaultValue={currentProject?.description} required />
-              </div>
-              <div className="space-y-4">
-                  <Label>Technologies</Label>
-                  <div className="space-y-4">
-                    {technologyCategories.map((category) => (
-                      <div key={category.title}>
-                        <h4 className="mb-2 font-medium text-sm text-muted-foreground">{category.title}</h4>
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                          {category.skills.map((skill) => (
-                            <div key={skill} className="flex items-center space-x-2">
-                              <Checkbox
-                                id={`tech-${skill}`}
-                                checked={selectedTechnologies.includes(skill)}
-                                onCheckedChange={() => handleTechChange(skill)}
-                              />
-                              <Label htmlFor={`tech-${skill}`} className="text-sm font-normal">
-                                {skill}
-                              </Label>
-                            </div>
-                          ))}
+            <ScrollArea className="max-h-[60vh] p-4">
+              <div className="grid gap-6 py-4">
+                <div className="space-y-2">
+                    <Label htmlFor="title">Title</Label>
+                    <Input id="title" name="title" defaultValue={currentProject?.title} required />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea id="description" name="description" defaultValue={currentProject?.description} required />
+                </div>
+                <div className="space-y-4">
+                    <Label>Technologies</Label>
+                    <div className="space-y-4">
+                      {technologyCategories.map((category) => (
+                        <div key={category.title}>
+                          <h4 className="mb-2 font-medium text-sm text-muted-foreground">{category.title}</h4>
+                          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                            {category.skills.map((skill) => (
+                              <div key={skill} className="flex items-center space-x-2">
+                                <Checkbox
+                                  id={`tech-${skill}`}
+                                  checked={selectedTechnologies.includes(skill)}
+                                  onCheckedChange={() => handleTechChange(skill)}
+                                />
+                                <Label htmlFor={`tech-${skill}`} className="text-sm font-normal">
+                                  {skill}
+                                </Label>
+                              </div>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Project Image</Label>
+                  <div className="flex items-center gap-4">
+                      {imagePreview && <Image src={imagePreview} alt="Project preview" width={80} height={80} className="rounded-md object-cover" />}
+                      <Input id="image" name="image" type="file" onChange={handleImageChange} accept="image/*" className="w-full" />
                   </div>
-              </div>
-
-               <div className="space-y-2">
-                <Label>Project Image</Label>
-                <div className="flex items-center gap-4">
-                    {imagePreview && <Image src={imagePreview} alt="Project preview" width={80} height={80} className="rounded-md object-cover" />}
-                    <Input id="image" name="image" type="file" onChange={handleImageChange} accept="image/*" className="w-full" />
                 </div>
-              </div>
 
-               <div className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                    <Label htmlFor="liveLink">Live URL</Label>
-                    <Input id="liveLink" name="liveLink" defaultValue={currentProject?.liveLink} />
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                      <Label htmlFor="liveLink">Live URL</Label>
+                      <Input id="liveLink" name="liveLink" defaultValue={currentProject?.liveLink} />
+                  </div>
+                  <div className="space-y-2">
+                      <Label htmlFor="githubLink">GitHub URL</Label>
+                      <Input id="githubLink" name="githubLink" defaultValue={currentProject?.githubLink} />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                    <Label htmlFor="githubLink">GitHub URL</Label>
-                    <Input id="githubLink" name="githubLink" defaultValue={currentProject?.githubLink} />
-                </div>
-              </div>
 
-            </div>
+              </div>
+            </ScrollArea>
             <DialogFooter>
               <DialogClose asChild>
                 <Button type="button" variant="secondary">Cancel</Button>
