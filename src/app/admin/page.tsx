@@ -411,7 +411,7 @@ export default function AdminDashboard() {
 
               </div>
             </ScrollArea>
-            <DialogFooter className="pt-4 border-t mt-4">
+            <DialogFooter className="pt-4 border-t mt-auto">
               <DialogClose asChild>
                 <Button type="button" variant="secondary" disabled={isSubmitting}>Cancel</Button>
               </DialogClose>
