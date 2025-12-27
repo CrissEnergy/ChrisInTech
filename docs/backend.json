@@ -34,11 +34,6 @@
           "type": "string",
           "description": "URL to the live demo of the project.",
           "format": "uri"
-        },
-        "githubUrl": {
-          "type": "string",
-          "description": "URL to the GitHub repository of the project.",
-          "format": "uri"
         }
       },
       "required": [
@@ -47,8 +42,7 @@
         "description",
         "imageUrl",
         "technologies",
-        "liveDemoUrl",
-        "githubUrl"
+        "liveDemoUrl"
       ]
     },
     "Skill": {

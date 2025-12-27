@@ -52,7 +52,6 @@ export function Projects() {
                   </CardContent>
                   <CardFooter className="justify-center space-x-4">
                     <Skeleton className="h-10 w-24" />
-                    <Skeleton className="h-10 w-24" />
                   </CardFooter>
                 </Card>
               </AnimateOnScroll>
@@ -84,9 +83,6 @@ export function Projects() {
                   <CardFooter className="justify-center space-x-4">
                     <Button asChild>
                       <Link href={project.liveLink} target="_blank">Live Now</Link>
-                    </Button>
-                    <Button variant="outline" asChild>
-                      <Link href={project.githubLink} target="_blank">GitHub</Link>
                     </Button>
                   </CardFooter>
                 </Card>

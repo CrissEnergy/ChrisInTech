@@ -153,7 +153,6 @@ export default function AdminDashboard() {
           description: formData.get('description') as string,
           technologies: selectedTechnologies,
           liveLink: formData.get('liveLink') as string,
-          githubLink: formData.get('githubLink') as string,
           imageUrl: imageUrl,
         };
 
@@ -347,15 +346,15 @@ export default function AdminDashboard() {
 
       {/* Add/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={(isOpen) => { setIsDialogOpen(isOpen); if (!isOpen) setCurrentProject(null); }}>
-        <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col">
+        <DialogContent className="sm:max-w-2xl flex flex-col max-h-[90vh]">
            <DialogHeader>
               <DialogTitle>{currentProject ? 'Edit Project' : 'Add New Project'}</DialogTitle>
               <DialogDescription>
                 {currentProject ? 'Update the details of your project.' : 'Fill in the details for your new project.'}
               </DialogDescription>
             </DialogHeader>
-            <div className="flex-grow overflow-y-auto px-6 py-2">
-              <form id="project-form" onSubmit={handleFormSubmit} className="grid gap-6">
+            <div className="flex-grow overflow-y-auto pr-6">
+              <form id="project-form" onSubmit={handleFormSubmit} className="grid gap-6 pl-6">
                 <div className="space-y-2">
                     <Label htmlFor="title">Title</Label>
                     <Input id="title" name="title" defaultValue={currentProject?.title} required />
@@ -383,19 +382,15 @@ export default function AdminDashboard() {
                   </div>
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-4">
+                <div className="grid md:grid-cols-1 gap-4">
                   <div className="space-y-2">
                       <Label htmlFor="liveLink">Live URL</Label>
                       <Input id="liveLink" name="liveLink" defaultValue={currentProject?.liveLink} />
                   </div>
-                  <div className="space-y-2">
-                      <Label htmlFor="githubLink">GitHub URL</Label>
-                      <Input id="githubLink" name="githubLink" defaultValue={currentProject?.githubLink} />
-                  </div>
                 </div>
               </form>
             </div>
-            <DialogFooter className="pt-4 border-t px-6 pb-6">
+            <DialogFooter className="pt-4 border-t">
               <DialogClose asChild>
                 <Button type="button" variant="secondary" disabled={isSubmitting}>Cancel</Button>
               </DialogClose>
