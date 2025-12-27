@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { MoreHorizontal, PlusCircle, UploadCloud } from 'lucide-react';
 import { collection, doc, addDoc, updateDoc, deleteDoc, setDoc } from 'firebase/firestore';
-import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 import {
   useFirebase,
   useCollection,
@@ -49,7 +48,6 @@ import type { Project } from '@/lib/mock-data';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { MultiSelect, type Option } from '@/components/ui/multi-select';
-import ImageCropperDialog from '@/components/ui/image-cropper-dialog';
 
 const technologyOptions: Option[] = [
   { value: 'HTML5', label: 'HTML5' },
@@ -97,12 +95,8 @@ export default function AdminDashboard() {
   );
   const { data: profileSettings, isLoading: isLoadingProfile } = useDoc<SiteProfile>(profileSettingsDoc);
   
-  const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
-  const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null);
-  const [isUploadingProfile, setIsUploadingProfile] = useState(false);
-  const profileFileInputRef = useRef<HTMLInputElement>(null);
-  const [isCropperOpen, setIsCropperOpen] = useState(false);
-
+  const [profileImageUrl, setProfileImageUrl] = useState('');
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -126,56 +120,41 @@ export default function AdminDashboard() {
   }, [currentProject, isDialogOpen]);
 
   useEffect(() => {
-    if (profileSettings?.aboutImageUrl && !profileImageFile) {
-      setProfileImagePreview(profileSettings.aboutImageUrl);
+    if (profileSettings?.aboutImageUrl) {
+      setProfileImageUrl(profileSettings.aboutImageUrl);
     }
-  }, [profileSettings, profileImageFile]);
+  }, [profileSettings]);
 
-  const handleProfileImageChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setProfileImagePreview(reader.result as string);
-        setIsCropperOpen(true);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
 
-  const handleProfileImageUpload = async (imageBlob: Blob) => {
-    if (!imageBlob || !firestore || !user) return;
+  const handleProfileImageSave = async () => {
+    if (!profileImageUrl || !firestore) return;
 
-    setIsUploadingProfile(true);
+    setIsSavingProfile(true);
     try {
-      const storage = getStorage();
-      const imageRef = storageRef(storage, `profileImages/${user.uid}/profile.jpg`);
-      const snapshot = await uploadBytes(imageRef, imageBlob, { contentType: 'image/jpeg' });
-      const downloadURL = await getDownloadURL(snapshot.ref);
-
       const profileDocRef = doc(firestore, 'settings', 'profile');
-      await setDoc(profileDocRef, { aboutImageUrl: downloadURL }, { merge: true });
+      await setDoc(profileDocRef, { aboutImageUrl: profileImageUrl }, { merge: true });
       
       toast({
         title: 'Profile Image Updated',
-        description: 'Your new profile image has been saved.',
+        description: 'Your new profile image URL has been saved.',
       });
-      setProfileImageFile(null); // Clear the original file
-      setProfileImagePreview(downloadURL); // Set preview to the final URL
 
     } catch (error: any) {
-      console.error("Error uploading profile image:", error);
+      console.error("Error saving profile image URL:", error);
+      const permissionError = new FirestorePermissionError({
+        path: 'settings/profile',
+        operation: 'update',
+        requestResourceData: { aboutImageUrl: profileImageUrl },
+      });
+      errorEmitter.emit('permission-error', permissionError);
+
       toast({
-        title: 'Upload Error',
-        description: error.message || 'Could not upload the profile image.',
+        title: 'Save Error',
+        description: error.message || 'Could not save the profile image URL.',
         variant: 'destructive'
       });
     } finally {
-      setIsUploadingProfile(false);
-      setIsCropperOpen(false);
-       if (profileFileInputRef.current) {
-        profileFileInputRef.current.value = '';
-      }
+      setIsSavingProfile(false);
     }
   };
 
@@ -301,23 +280,6 @@ export default function AdminDashboard() {
 
   return (
     <>
-       {profileImagePreview && isCropperOpen && (
-        <ImageCropperDialog
-          isOpen={isCropperOpen}
-          onClose={() => {
-            setIsCropperOpen(false);
-            setProfileImageFile(null);
-            // Revert preview to original if crop is cancelled
-            setProfileImagePreview(profileSettings?.aboutImageUrl || null); 
-             if (profileFileInputRef.current) {
-               profileFileInputRef.current.value = '';
-            }
-          }}
-          image={profileImagePreview}
-          onSave={handleProfileImageUpload}
-          isLoading={isUploadingProfile}
-        />
-      )}
       <div className="flex items-center">
         <div className="ml-auto flex items-center gap-2">
           <Button onClick={handleLogout} variant="outline">Logout</Button>
@@ -335,41 +297,45 @@ export default function AdminDashboard() {
                 <CardTitle>Profile Settings</CardTitle>
                 <CardDescription>Update your public profile picture.</CardDescription>
             </CardHeader>
-            <CardContent>
-                <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label>Profile Image</Label>
-                       <div
-                        className="relative flex cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/50 p-4 text-center hover:bg-muted"
-                        onClick={() => profileFileInputRef.current?.click()}
-                      >
-                        <input
-                          type="file"
-                          accept="image/*"
-                          ref={profileFileInputRef}
-                          onChange={handleProfileImageChange}
-                          className="hidden"
-                          disabled={isUploadingProfile}
-                        />
-                        {isLoadingProfile ? (
-                            <Skeleton className="h-40 w-40 rounded-full" />
-                        ) : profileImagePreview ? (
-                          <Image
-                            src={profileImagePreview}
-                            alt="Profile preview"
-                            width={160}
-                            height={160}
-                            className="h-40 w-40 rounded-full object-cover"
-                          />
-                        ) : (
-                          <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                            <UploadCloud className="h-10 w-10" />
-                            <span>Click to upload image</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="profile-image-url">Profile Image URL</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="profile-image-url"
+                    value={profileImageUrl}
+                    onChange={(e) => setProfileImageUrl(e.target.value)}
+                    placeholder="https://example.com/image.jpg"
+                    disabled={isSavingProfile}
+                  />
+                  <Button onClick={handleProfileImageSave} disabled={isSavingProfile}>
+                    {isSavingProfile ? 'Saving...' : 'Save'}
+                  </Button>
                 </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Current Image</Label>
+                 <div
+                  className="relative flex items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/50 p-4 text-center"
+                >
+                  {isLoadingProfile ? (
+                      <Skeleton className="h-40 w-40 rounded-full" />
+                  ) : profileImageUrl ? (
+                    <Image
+                      src={profileImageUrl}
+                      alt="Profile preview"
+                      width={160}
+                      height={160}
+                      className="h-40 w-40 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center gap-2 text-muted-foreground h-40 w-40 justify-center">
+                      <UploadCloud className="h-10 w-10" />
+                      <span>No Image URL</span>
+                    </div>
+                  )}
+                </div>
+              </div>
             </CardContent>
         </Card>
         <Card className="lg:col-span-5">
@@ -527,5 +493,3 @@ export default function AdminDashboard() {
     </>
   );
 }
-
-    
