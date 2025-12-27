@@ -69,8 +69,8 @@ service cloud.firestore {
      * @principle Enforces strict role-based access control for content management.
      */
     match /projects/{projectId} {
-      allow get: if isAdmin();
-      allow list: if isAdmin();
+      allow get: if true;
+      allow list: if true;
       allow create: if isAdmin();
       allow update: if isAdmin();
       allow delete: if isAdmin();
@@ -85,8 +85,8 @@ service cloud.firestore {
      * @principle Enforces strict role-based access control for content management.
      */
     match /skills/{skillId} {
-      allow get: if isAdmin();
-      allow list: if isAdmin();
+      allow get: if true;
+      allow list: if true;
       allow create: if isAdmin();
       allow update: if isAdmin();
       allow delete: if isAdmin();
