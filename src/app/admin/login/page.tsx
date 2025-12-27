@@ -39,9 +39,9 @@ export default function LoginPage() {
         await createUserWithEmailAndPassword(auth, email, password);
         toast({
           title: 'Sign Up Successful',
-          description: 'You can now sign in.',
+          description: 'Your admin account has been created. Please sign in.',
         });
-        setIsSignUp(false); // Switch to sign-in view
+        setIsSignUp(false); // Switch back to sign-in view after successful sign-up
       } else {
         await signInWithEmailAndPassword(auth, email, password);
         toast({
@@ -51,7 +51,6 @@ export default function LoginPage() {
         router.push('/admin');
       }
     } catch (error: any) {
-      // Improved error handling
       let errorMessage = 'An unexpected error occurred.';
       if (error.code) {
         switch (error.code) {
@@ -127,14 +126,14 @@ export default function LoginPage() {
             {isSignUp ? (
               <>
                 Already have an account?{' '}
-                <Button variant="link" className="p-0 h-auto" onClick={() => setIsSignUp(false)}>
+                <Button variant="link" className="p-0 h-auto" onClick={() => setIsSignUp(false)} disabled={isLoading}>
                   Sign In
                 </Button>
               </>
             ) : (
               <>
                 Don&apos;t have an account?{' '}
-                <Button variant="link" className="p-0 h-auto" onClick={() => setIsSignUp(true)}>
+                <Button variant="link" className="p-0 h-auto" onClick={() => setIsSignUp(true)} disabled={isLoading}>
                   Sign Up
                 </Button>
               </>
