@@ -1,0 +1,129 @@
+rules_version = '2';
+
+/**
+ * @name Chris In Tech Portfolio - Admin Management
+ * @file firestore.rules
+ *
+ * @description
+ * This ruleset is designed for the administrative backend of a portfolio website.
+ * It enforces a strict, role-based access control model where only designated
+ * administrators can manage the portfolio's content.
+ *
+ * @philosophy
+ * Core Philosophy: The security model is centered around a global 'admin' role.
+ * Users are granted admin privileges by the existence of a document containing their
+ * UID in the `/roles_admin` collection. All content management collections
+ * (`projects`, `skills`) are locked down to admin users for all read and write
+ * operations. The `contact_messages` collection allows public creation but restricts
+ * all management (reading, deleting) to admins.
+ *
+ * Data Structure: The data is organized into flat, top-level collections for each
+ * entity type (`projects`, `skills`, `contact_messages`). A dedicated collection,
+ * `roles_admin`, is used to manage admin roles.
+ *
+ * Key Security Decisions:
+ * - Admin Role Check: Access is primarily determined by a single, performant `exists()`
+ *   call to the `/roles_admin` collection. This avoids slow and costly `get()` calls.
+ * - Public Write, Private Read: The `contact_messages` collection is configured to
+ *   allow any user (anonymous or authenticated) to submit a message, but only
+ *   admins can view or delete these messages.
+ * - Admin Self-Management: Only existing administrators can add or remove other
+ *   administrators, preventing unauthorized privilege escalation.
+ * - Prototyping Flexibility: Data schemas are not enforced in these rules. The focus
+ *   is strictly on *authorization* (who can do what), not *validation* (what the
+ *   data looks like), to allow for rapid development and iteration.
+ */
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ------------------------------------------------------------------------
+    // Helper Functions
+    // ------------------------------------------------------------------------
+
+    /**
+     * Checks if the user is authenticated.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Checks if the requesting user has admin privileges.
+     * Admin status is granted by the existence of a document in the 'roles_admin'
+     * collection where the document ID matches the user's UID.
+     */
+    function isAdmin() {
+      return exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
+    }
+
+    // ------------------------------------------------------------------------
+    // Collection Rules
+    // ------------------------------------------------------------------------
+
+    /**
+     * @description Manages portfolio project documents.
+     * Only authenticated admin users can read, create, update, or delete projects.
+     * @path /projects/{projectId}
+     * @allow (create) An admin user creates a new project document. auth.uid is in /roles_admin.
+     * @deny (list) A non-admin user or an anonymous user attempts to list projects.
+     * @principle Enforces strict role-based access control for content management.
+     */
+    match /projects/{projectId} {
+      allow get: if isAdmin();
+      allow list: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    /**
+     * @description Manages developer skill documents.
+     * Only authenticated admin users can read, create, update, or delete skills.
+     * @path /skills/{skillId}
+     * @allow (update) An admin user updates an existing skill document. auth.uid is in /roles_admin.
+     * @deny (get) A non-admin user attempts to read a skill document.
+     * @principle Enforces strict role-based access control for content management.
+     */
+    match /skills/{skillId} {
+      allow get: if isAdmin();
+      allow list: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    /**
+     * @description Stores contact form messages.
+     * Allows public write access for creation but restricts all read and
+     * management operations to admin users.
+     * @path /contact_messages/{messageId}
+     * @allow (create) An anonymous visitor to the website submits a contact form message.
+     * @deny (list) A non-admin user attempts to read all submitted contact messages.
+     * @principle Implements a public-write, private-read pattern for user-submitted content.
+     */
+    match /contact_messages/{messageId} {
+      allow get: if isAdmin();
+      allow list: if isAdmin();
+      allow create: if true;
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    /**
+     * @description Manages admin user roles.
+     * The existence of a document here grants a user admin privileges across the app.
+     * Only existing admins can read this collection or add/remove other admins.
+     * @path /roles_admin/{userId}
+     * @allow (create) An existing admin adds a new admin by creating a document with the new admin's UID.
+     * @deny (delete) A non-admin user tries to remove an admin's role document.
+     * @principle Secures the role management system itself, preventing privilege escalation.
+     */
+    match /roles_admin/{userId} {
+      allow get: if isAdmin();
+      allow list: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if false;
+      allow delete: if isAdmin();
+    }
+  }
+}
