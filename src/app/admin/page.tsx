@@ -42,7 +42,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
@@ -50,25 +49,33 @@ import type { Project } from '@/lib/mock-data';
 import { getStorage } from 'firebase/storage';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { MultiSelect, type Option } from '@/components/ui/multi-select';
 
-const technologyCategories = [
-    {
-      title: 'Frontend',
-      skills: ['HTML5', 'CSS3', 'JavaScript', 'React', 'Vue.js', 'Next.js'],
-    },
-    {
-      title: 'Backend',
-      skills: ['Node.js', 'Python', 'PHP', 'SQL'],
-    },
-    {
-      title: 'Tools & Others',
-      skills: ['Git', 'Webpack', 'Figma', 'Adobe XD', 'REST APIs', 'WordPress', 'Supabase', 'Firebase'],
-    },
-    {
-      title: 'Data Analysis',
-      skills: ['Python', 'R', 'Stata', 'Spss', 'EViews'],
-    },
+const technologyOptions: Option[] = [
+  { value: 'HTML5', label: 'HTML5' },
+  { value: 'CSS3', label: 'CSS3' },
+  { value: 'JavaScript', label: 'JavaScript' },
+  { value: 'React', label: 'React' },
+  { value: 'Vue.js', label: 'Vue.js' },
+  { value: 'Next.js', label: 'Next.js' },
+  { value: 'Node.js', label: 'Node.js' },
+  { value: 'Python', label: 'Python' },
+  { value: 'PHP', label: 'PHP' },
+  { value: 'SQL', label: 'SQL' },
+  { value: 'Git', label: 'Git' },
+  { value: 'Webpack', label: 'Webpack' },
+  { value: 'Figma', label: 'Figma' },
+  { value: 'Adobe XD', label: 'Adobe XD' },
+  { value: 'REST APIs', label: 'REST APIs' },
+  { value: 'WordPress', label: 'WordPress' },
+  { value: 'Supabase', label: 'Supabase' },
+  { value: 'Firebase', label: 'Firebase' },
+  { value: 'R', label: 'R' },
+  { value: 'Stata', label: 'Stata' },
+  { value: 'Spss', label: 'Spss' },
+  { value: 'EViews', label: 'EViews' },
 ];
+
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -125,12 +132,6 @@ export default function AdminDashboard() {
       setImageFile(file);
       setImagePreview(URL.createObjectURL(file));
     }
-  };
-
-  const handleTechChange = (tech: string) => {
-    setSelectedTechnologies(prev =>
-      prev.includes(tech) ? prev.filter(t => t !== tech) : [...prev, tech]
-    );
   };
 
   const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -365,29 +366,15 @@ export default function AdminDashboard() {
                   <Label htmlFor="description">Description</Label>
                   <Textarea id="description" name="description" defaultValue={currentProject?.description} required />
                 </div>
-                <div className="space-y-4">
-                    <Label>Technologies</Label>
-                    <div className="space-y-4">
-                      {technologyCategories.map((category) => (
-                        <div key={category.title}>
-                          <h4 className="mb-2 font-medium text-sm text-muted-foreground">{category.title}</h4>
-                          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                            {category.skills.map((skill) => (
-                              <div key={skill} className="flex items-center space-x-2">
-                                <Checkbox
-                                  id={`tech-${skill}`}
-                                  checked={selectedTechnologies.includes(skill)}
-                                  onCheckedChange={() => handleTechChange(skill)}
-                                />
-                                <Label htmlFor={`tech-${skill}`} className="text-sm font-normal">
-                                  {skill}
-                                </Label>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                <div className="space-y-2">
+                  <Label>Technologies</Label>
+                  <MultiSelect
+                    options={technologyOptions}
+                    onValueChange={setSelectedTechnologies}
+                    defaultValue={selectedTechnologies}
+                    placeholder="Select technologies"
+                    className="w-full"
+                  />
                 </div>
 
                 <div className="space-y-2">
