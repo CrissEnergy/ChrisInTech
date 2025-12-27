@@ -84,6 +84,7 @@ type ContactMessage = {
   id: string;
   name: string;
   email: string;
+  phone?: string;
   message: string;
   timestamp: {
     seconds: number;
@@ -492,6 +493,7 @@ export default function AdminDashboard() {
                   <TableHead>Date</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Email</TableHead>
+                  <TableHead>Phone</TableHead>
                   <TableHead>Message</TableHead>
                   <TableHead>
                     <span className="sr-only">Actions</span>
@@ -505,6 +507,7 @@ export default function AdminDashboard() {
                       <TableCell><Skeleton className="h-4 w-32" /></TableCell>
                       <TableCell><Skeleton className="h-4 w-24" /></TableCell>
                       <TableCell><Skeleton className="h-4 w-40" /></TableCell>
+                      <TableCell><Skeleton className="h-4 w-32" /></TableCell>
                       <TableCell><Skeleton className="h-4 w-full" /></TableCell>
                       <TableCell><Skeleton className="h-8 w-8" /></TableCell>
                     </TableRow>
@@ -515,6 +518,7 @@ export default function AdminDashboard() {
                       <TableCell className="font-medium whitespace-nowrap">{formatDate(message.timestamp)}</TableCell>
                       <TableCell>{message.name}</TableCell>
                       <TableCell>{message.email}</TableCell>
+                      <TableCell>{message.phone || 'N/A'}</TableCell>
                       <TableCell className="max-w-md truncate">{message.message}</TableCell>
                       <TableCell>
                         <Button
@@ -530,7 +534,7 @@ export default function AdminDashboard() {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center">
+                    <TableCell colSpan={6} className="text-center">
                       No messages received yet.
                     </TableCell>
                   </TableRow>
@@ -631,3 +635,5 @@ export default function AdminDashboard() {
     </>
   );
 }
+
+    

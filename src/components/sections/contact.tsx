@@ -74,6 +74,13 @@ export function Contact() {
               </div>
             </div>
             <div className="space-y-2">
+              <Label htmlFor="phone">Phone Number (Optional)</Label>
+              <Input id="phone" name="phone" type="tel" placeholder="Your phone number" />
+               {state.errors?.phone && (
+                  <p className="text-sm text-destructive">{state.errors.phone.join(', ')}</p>
+                )}
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="message">Message</Label>
               <Textarea id="message" name="message" placeholder="Your message" required />
                {state.errors?.message && (
@@ -99,3 +106,5 @@ export function Contact() {
     </section>
   );
 }
+
+    

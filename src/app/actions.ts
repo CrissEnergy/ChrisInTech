@@ -7,6 +7,7 @@ import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 const contactSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters long.' }),
   email: z.string().email({ message: 'Please enter a valid email address.' }),
+  phone: z.string().optional(),
   message: z.string().min(10, { message: 'Message must be at least 10 characters long.' }),
 });
 
@@ -15,6 +16,7 @@ export type FormState = {
   errors?: {
     name?: string[];
     email?: string[];
+    phone?: string[];
     message?: string[];
   };
   success: boolean;
@@ -27,6 +29,7 @@ export async function submitContactForm(
   const validatedFields = contactSchema.safeParse({
     name: formData.get('name'),
     email: formData.get('email'),
+    phone: formData.get('phone'),
     message: formData.get('message'),
   });
 
@@ -45,6 +48,7 @@ export async function submitContactForm(
     await addDoc(messagesCollection, {
       name: validatedFields.data.name,
       email: validatedFields.data.email,
+      phone: validatedFields.data.phone,
       message: validatedFields.data.message,
       timestamp: serverTimestamp(),
     });
@@ -61,3 +65,5 @@ export async function submitContactForm(
     };
   }
 }
+
+    
