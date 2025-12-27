@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -51,10 +51,33 @@ export default function LoginPage() {
         router.push('/admin');
       }
     } catch (error: any) {
+      // Improved error handling
+      let errorMessage = 'An unexpected error occurred.';
+      if (error.code) {
+        switch (error.code) {
+          case 'auth/user-not-found':
+            errorMessage = 'No account found with this email. Please sign up.';
+            break;
+          case 'auth/wrong-password':
+            errorMessage = 'Incorrect password. Please try again.';
+            break;
+          case 'auth/email-already-in-use':
+            errorMessage = 'This email is already in use. Please sign in.';
+            break;
+          case 'auth/weak-password':
+            errorMessage = 'The password is too weak. Please use at least 6 characters.';
+            break;
+          case 'auth/invalid-email':
+            errorMessage = 'Please enter a valid email address.';
+            break;
+          default:
+            errorMessage = error.message;
+        }
+      }
       toast({
         variant: 'destructive',
-        title: 'Authentication Failed',
-        description: error.message || 'An unexpected error occurred.',
+        title: isSignUp ? 'Sign Up Failed' : 'Sign In Failed',
+        description: errorMessage,
       });
     } finally {
       setIsLoading(false);
@@ -67,7 +90,7 @@ export default function LoginPage() {
         <CardHeader>
           <CardTitle className="text-2xl">{isSignUp ? 'Admin Sign Up' : 'Admin Login'}</CardTitle>
           <CardDescription>
-            {isSignUp ? 'Create an admin account' : 'Enter your credentials to access the project dashboard'}
+            {isSignUp ? 'Create an admin account to manage your portfolio' : 'Enter your credentials to access the project dashboard'}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -89,6 +112,7 @@ export default function LoginPage() {
               <Input
                 id="password"
                 type="password"
+                placeholder="••••••••"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -99,9 +123,23 @@ export default function LoginPage() {
               {isLoading ? 'Processing...' : isSignUp ? 'Sign Up' : 'Sign In'}
             </Button>
           </form>
-          <Button variant="link" className="mt-4 w-full" onClick={() => setIsSignUp(!isSignUp)}>
-            {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
-          </Button>
+          <div className="mt-4 text-center text-sm">
+            {isSignUp ? (
+              <>
+                Already have an account?{' '}
+                <Button variant="link" className="p-0 h-auto" onClick={() => setIsSignUp(false)}>
+                  Sign In
+                </Button>
+              </>
+            ) : (
+              <>
+                Don&apos;t have an account?{' '}
+                <Button variant="link" className="p-0 h-auto" onClick={() => setIsSignUp(true)}>
+                  Sign Up
+                </Button>
+              </>
+            )}
+          </div>
         </CardContent>
       </Card>
     </div>

@@ -3,8 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { MoreHorizontal, PlusCircle } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Upload } from 'lucide-react';
 import { collection, doc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import {
   useFirebase,
   useCollection,
@@ -44,15 +45,36 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-
+import { Checkbox } from '@/components/ui/checkbox';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import type { Project } from '@/lib/mock-data';
-import { Skeleton } from '@/components/ui/skeleton';
+import { getStorage } from 'firebase/storage';
+
+const technologyCategories = [
+    {
+      title: 'Frontend',
+      skills: ['HTML5', 'CSS3', 'JavaScript', 'React', 'Vue.js', 'Next.js'],
+    },
+    {
+      title: 'Backend',
+      skills: ['Node.js', 'Python', 'PHP', 'SQL'],
+    },
+    {
+      title: 'Tools & Others',
+      skills: ['Git', 'Webpack', 'Figma', 'Adobe XD', 'REST APIs', 'WordPress', 'Supabase', 'Firebase'],
+    },
+    {
+      title: 'Data Analysis',
+      skills: ['Python', 'R', 'Stata', 'Spss', 'EViews'],
+    },
+];
 
 export default function AdminDashboard() {
   const router = useRouter();
   const { toast } = useToast();
-  const { firestore, auth, user, isUserLoading } = useFirebase();
+  const { firestore, auth, user, isUserLoading, firebaseApp } = useFirebase();
+  const storage = firebaseApp ? getStorage(firebaseApp) : null;
 
   const projectsCollection = useMemoFirebase(
     () => (firestore ? collection(firestore, 'projects') : null),
@@ -64,12 +86,26 @@ export default function AdminDashboard() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
   const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
+  const [selectedTechnologies, setSelectedTechnologies] = useState<string[]>([]);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isUserLoading && !user) {
       router.push('/admin/login');
     }
   }, [user, isUserLoading, router]);
+
+  useEffect(() => {
+    if (currentProject) {
+      setSelectedTechnologies(currentProject.technologies || []);
+      setImagePreview(currentProject.imageUrl || null);
+    } else {
+      setSelectedTechnologies([]);
+      setImagePreview(null);
+    }
+    setImageFile(null);
+  }, [currentProject, isDialogOpen]);
 
   const handleLogout = async () => {
     if (auth) {
@@ -81,20 +117,41 @@ export default function AdminDashboard() {
       });
     }
   };
+  
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
 
-  const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleTechChange = (tech: string) => {
+    setSelectedTechnologies(prev =>
+      prev.includes(tech) ? prev.filter(t => t !== tech) : [...prev, tech]
+    );
+  };
+
+  const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!firestore) return;
+    if (!firestore || !storage) return;
+
+    let imageUrl = currentProject?.imageUrl || `https://picsum.photos/seed/${Date.now()}/400/300`;
+
+    if (imageFile) {
+        const imageRef = ref(storage, `projects/${Date.now()}_${imageFile.name}`);
+        await uploadBytes(imageRef, imageFile);
+        imageUrl = await getDownloadURL(imageRef);
+    }
 
     const formData = new FormData(e.currentTarget);
     const projectData = {
       title: formData.get('title') as string,
       description: formData.get('description') as string,
-      technologies: (formData.get('technologies') as string).split(',').map(t => t.trim()),
+      technologies: selectedTechnologies,
       liveLink: formData.get('liveLink') as string,
       githubLink: formData.get('githubLink') as string,
-      // Keep existing image or use a placeholder
-      imageUrl: currentProject?.imageUrl || `https://picsum.photos/seed/${Date.now()}/400/300`,
+      imageUrl: imageUrl,
     };
 
     if (currentProject) {
@@ -246,7 +303,7 @@ export default function AdminDashboard() {
 
       {/* Add/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={(isOpen) => { setIsDialogOpen(isOpen); if (!isOpen) setCurrentProject(null); }}>
-        <DialogContent className="sm:max-w-[525px]">
+        <DialogContent className="sm:max-w-2xl">
           <form onSubmit={handleFormSubmit}>
             <DialogHeader>
               <DialogTitle>{currentProject ? 'Edit Project' : 'Add New Project'}</DialogTitle>
@@ -254,27 +311,59 @@ export default function AdminDashboard() {
                 {currentProject ? 'Update the details of your project.' : 'Fill in the details for your new project.'}
               </DialogDescription>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="title" className="text-right">Title</Label>
-                <Input id="title" name="title" defaultValue={currentProject?.title} className="col-span-3" required />
+            <div className="grid gap-6 py-4">
+               <div className="space-y-2">
+                  <Label htmlFor="title">Title</Label>
+                  <Input id="title" name="title" defaultValue={currentProject?.title} required />
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="description" className="text-right">Description</Label>
-                <Textarea id="description" name="description" defaultValue={currentProject?.description} className="col-span-3" required />
+               <div className="space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea id="description" name="description" defaultValue={currentProject?.description} required />
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="technologies" className="text-right">Technologies</Label>
-                <Input id="technologies" name="technologies" placeholder="React, Node.js, etc." defaultValue={currentProject?.technologies.join(', ')} className="col-span-3" required />
+              <div className="space-y-4">
+                  <Label>Technologies</Label>
+                  <div className="space-y-4">
+                    {technologyCategories.map((category) => (
+                      <div key={category.title}>
+                        <h4 className="mb-2 font-medium text-sm text-muted-foreground">{category.title}</h4>
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                          {category.skills.map((skill) => (
+                            <div key={skill} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`tech-${skill}`}
+                                checked={selectedTechnologies.includes(skill)}
+                                onCheckedChange={() => handleTechChange(skill)}
+                              />
+                              <Label htmlFor={`tech-${skill}`} className="text-sm font-normal">
+                                {skill}
+                              </Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="liveLink" className="text-right">Live URL</Label>
-                <Input id="liveLink" name="liveLink" defaultValue={currentProject?.liveLink} className="col-span-3" />
+
+               <div className="space-y-2">
+                <Label>Project Image</Label>
+                <div className="flex items-center gap-4">
+                    {imagePreview && <Image src={imagePreview} alt="Project preview" width={80} height={80} className="rounded-md object-cover" />}
+                    <Input id="image" name="image" type="file" onChange={handleImageChange} accept="image/*" className="w-full" />
+                </div>
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="githubLink" className="text-right">GitHub URL</Label>
-                <Input id="githubLink" name="githubLink" defaultValue={currentProject?.githubLink} className="col-span-3" />
+
+               <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                    <Label htmlFor="liveLink">Live URL</Label>
+                    <Input id="liveLink" name="liveLink" defaultValue={currentProject?.liveLink} />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="githubLink">GitHub URL</Label>
+                    <Input id="githubLink" name="githubLink" defaultValue={currentProject?.githubLink} />
+                </div>
               </div>
+
             </div>
             <DialogFooter>
               <DialogClose asChild>
