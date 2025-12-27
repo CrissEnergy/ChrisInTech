@@ -12,6 +12,12 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
+        hostname: 'scontent.facc1-1.fna.fbcdn.net',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
         hostname: 's.wordpress.com',
         port: '',
         pathname: '/**',
