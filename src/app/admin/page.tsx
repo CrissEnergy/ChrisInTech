@@ -49,6 +49,7 @@ import type { Project } from '@/lib/mock-data';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { MultiSelect, type Option } from '@/components/ui/multi-select';
+import ImageCropperDialog from '@/components/ui/image-cropper-dialog';
 
 const technologyOptions: Option[] = [
   { value: 'HTML5', label: 'HTML5' },
@@ -100,6 +101,7 @@ export default function AdminDashboard() {
   const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null);
   const [isUploadingProfile, setIsUploadingProfile] = useState(false);
   const profileFileInputRef = useRef<HTMLInputElement>(null);
+  const [isCropperOpen, setIsCropperOpen] = useState(false);
 
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -136,19 +138,20 @@ export default function AdminDashboard() {
       const reader = new FileReader();
       reader.onloadend = () => {
         setProfileImagePreview(reader.result as string);
+        setIsCropperOpen(true);
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const handleProfileImageUpload = async () => {
-    if (!profileImageFile || !firestore) return;
+  const handleProfileImageUpload = async (imageBlob: Blob) => {
+    if (!imageBlob || !firestore || !user) return;
 
     setIsUploadingProfile(true);
     try {
       const storage = getStorage();
-      const imageRef = storageRef(storage, `profileImages/${user?.uid || 'default'}/${profileImageFile.name}`);
-      const snapshot = await uploadBytes(imageRef, profileImageFile);
+      const imageRef = storageRef(storage, `profileImages/${user.uid}/profile.jpg`);
+      const snapshot = await uploadBytes(imageRef, imageBlob, { contentType: 'image/jpeg' });
       const downloadURL = await getDownloadURL(snapshot.ref);
 
       const profileDocRef = doc(firestore, 'settings', 'profile');
@@ -159,6 +162,7 @@ export default function AdminDashboard() {
         description: 'Your new profile image has been saved.',
       });
       setProfileImageFile(null);
+      setProfileImagePreview(downloadURL);
 
     } catch (error: any) {
       console.error("Error uploading profile image:", error);
@@ -169,6 +173,7 @@ export default function AdminDashboard() {
       });
     } finally {
       setIsUploadingProfile(false);
+      setIsCropperOpen(false);
     }
   };
 
@@ -294,6 +299,18 @@ export default function AdminDashboard() {
 
   return (
     <>
+       {profileImagePreview && (
+        <ImageCropperDialog
+          isOpen={isCropperOpen}
+          onClose={() => {
+            setIsCropperOpen(false)
+            setProfileImageFile(null)
+          }}
+          image={profileImagePreview}
+          onSave={handleProfileImageUpload}
+          isLoading={isUploadingProfile}
+        />
+      )}
       <div className="flex items-center">
         <div className="ml-auto flex items-center gap-2">
           <Button onClick={handleLogout} variant="outline">Logout</Button>
@@ -325,10 +342,13 @@ export default function AdminDashboard() {
                           ref={profileFileInputRef}
                           onChange={handleProfileImageChange}
                           className="hidden"
+                          disabled={isUploadingProfile}
                         />
-                        {profileImagePreview ? (
+                        {isLoadingProfile ? (
+                            <Skeleton className="h-40 w-40 rounded-full" />
+                        ) : profileSettings?.aboutImageUrl ? (
                           <Image
-                            src={profileImagePreview}
+                            src={profileSettings.aboutImageUrl}
                             alt="Profile preview"
                             width={160}
                             height={160}
@@ -344,14 +364,6 @@ export default function AdminDashboard() {
                     </div>
                 </div>
             </CardContent>
-             <CardFooter>
-                <Button
-                  onClick={handleProfileImageUpload}
-                  disabled={isUploadingProfile || !profileImageFile}
-                >
-                  {isUploadingProfile ? 'Uploading...' : 'Save Profile Image'}
-                </Button>
-              </CardFooter>
         </Card>
         <Card className="lg:col-span-5">
             <CardHeader>
