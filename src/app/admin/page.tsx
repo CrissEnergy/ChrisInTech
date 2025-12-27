@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { MoreHorizontal, PlusCircle, UploadCloud, Trash2 } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Trash2 } from 'lucide-react';
 import { collection, doc, addDoc, updateDoc, deleteDoc, setDoc } from 'firebase/firestore';
 import {
   useFirebase,
@@ -103,8 +103,8 @@ export default function AdminDashboard() {
   const { data: projects, isLoading: isLoadingProjects } = useCollection<Project>(projectsCollection);
 
   const contactMessagesCollection = useMemoFirebase(
-    () => (firestore ? collection(firestore, 'contact_messages') : null),
-    [firestore]
+    () => (firestore && user ? collection(firestore, 'contact_messages') : null),
+    [firestore, user]
   );
   const { data: messages, isLoading: isLoadingMessages } = useCollection<ContactMessage>(contactMessagesCollection);
 
@@ -384,7 +384,6 @@ export default function AdminDashboard() {
                     />
                   ) : (
                     <div className="flex flex-col items-center gap-2 text-muted-foreground h-40 w-40 justify-center">
-                      <UploadCloud className="h-10 w-10" />
                       <span>No Image URL</span>
                     </div>
                   )}
