@@ -7,6 +7,7 @@ import { Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from '@/components/ui/sheet';
 import { Whatsapp } from '@/components/icons/whatsapp-icon';
+import { PhoneIcon } from '@/components/icons/phone-icon';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 const navItems = [
@@ -41,7 +42,12 @@ export function Header() {
               </li>
             ))}
           </ul>
-          <div className="ml-6">
+          <div className="ml-6 flex items-center gap-2">
+             <Button variant="ghost" size="icon" asChild>
+                <Link href="tel:+233596352632" aria-label="Call Us">
+                  <PhoneIcon className="h-5 w-5 text-foreground/80 transition-colors hover:text-primary" />
+                </Link>
+              </Button>
              <Button variant="ghost" size="icon" asChild>
                 <Link href="https://wa.me/message/RYP5SWAHLLZZD1" target="_blank" aria-label="WhatsApp">
                   <Whatsapp className="h-6 w-6 text-foreground/80 transition-colors hover:text-primary" />
@@ -50,6 +56,11 @@ export function Header() {
           </div>
         </nav>
         <div className="flex items-center gap-2 md:hidden">
+            <Button variant="ghost" size="icon" asChild>
+              <Link href="tel:+233596352632" aria-label="Call Us">
+                <PhoneIcon className="h-5 w-5 text-foreground/80 transition-colors hover:text-primary" />
+              </Link>
+            </Button>
            <Button variant="ghost" size="icon" asChild>
               <Link href="https://wa.me/message/RYP5SWAHLLZZD1" target="_blank" aria-label="WhatsApp">
                 <Whatsapp className="h-6 w-6 text-foreground/80 transition-colors hover:text-primary" />
