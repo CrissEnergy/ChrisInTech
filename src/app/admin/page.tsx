@@ -347,15 +347,15 @@ export default function AdminDashboard() {
 
       {/* Add/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={(isOpen) => { setIsDialogOpen(isOpen); if (!isOpen) setCurrentProject(null); }}>
-        <DialogContent className="sm:max-w-2xl">
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col">
            <DialogHeader>
               <DialogTitle>{currentProject ? 'Edit Project' : 'Add New Project'}</DialogTitle>
               <DialogDescription>
                 {currentProject ? 'Update the details of your project.' : 'Fill in the details for your new project.'}
               </DialogDescription>
             </DialogHeader>
-          <form onSubmit={handleFormSubmit}>
-            <ScrollArea className="max-h-[60vh] p-4">
+          <form onSubmit={handleFormSubmit} className="flex-1 overflow-hidden flex flex-col">
+            <ScrollArea className="flex-1 pr-6 -mr-6">
               <div className="grid gap-6 py-4">
                 <div className="space-y-2">
                     <Label htmlFor="title">Title</Label>
@@ -411,7 +411,7 @@ export default function AdminDashboard() {
 
               </div>
             </ScrollArea>
-            <DialogFooter className="pt-4">
+            <DialogFooter className="pt-4 border-t mt-4">
               <DialogClose asChild>
                 <Button type="button" variant="secondary" disabled={isSubmitting}>Cancel</Button>
               </DialogClose>
@@ -446,5 +446,3 @@ export default function AdminDashboard() {
     </>
   );
 }
-
-    
