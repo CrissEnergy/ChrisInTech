@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useState, useRef, ChangeEvent } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { MoreHorizontal, PlusCircle, UploadCloud } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, UploadCloud, Trash2 } from 'lucide-react';
 import { collection, doc, addDoc, updateDoc, deleteDoc, setDoc } from 'firebase/firestore';
 import {
   useFirebase,
@@ -48,6 +48,8 @@ import type { Project } from '@/lib/mock-data';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { MultiSelect, type Option } from '@/components/ui/multi-select';
+import { ScrollArea } from '@/components/ui/scroll-area';
+
 
 const technologyOptions: Option[] = [
   { value: 'HTML5', label: 'HTML5' },
@@ -78,6 +80,17 @@ type SiteProfile = {
   aboutImageUrl: string;
 };
 
+type ContactMessage = {
+  id: string;
+  name: string;
+  email: string;
+  message: string;
+  timestamp: {
+    seconds: number;
+    nanoseconds: number;
+  } | null;
+}
+
 export default function AdminDashboard() {
   const router = useRouter();
   const { toast } = useToast();
@@ -88,6 +101,12 @@ export default function AdminDashboard() {
     [firestore]
   );
   const { data: projects, isLoading: isLoadingProjects } = useCollection<Project>(projectsCollection);
+
+  const contactMessagesCollection = useMemoFirebase(
+    () => (firestore ? collection(firestore, 'contact_messages') : null),
+    [firestore]
+  );
+  const { data: messages, isLoading: isLoadingMessages } = useCollection<ContactMessage>(contactMessagesCollection);
 
   const profileSettingsDoc = useMemoFirebase(
     () => (firestore ? doc(firestore, 'settings', 'profile') : null),
@@ -104,6 +123,10 @@ export default function AdminDashboard() {
   const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
   const [selectedTechnologies, setSelectedTechnologies] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const [messageToDelete, setMessageToDelete] = useState<ContactMessage | null>(null);
+  const [isDeleteMessageDialogOpen, setIsDeleteMessageDialogOpen] = useState(false);
+
 
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -130,32 +153,32 @@ export default function AdminDashboard() {
     if (!profileImageUrl || !firestore) return;
 
     setIsSavingProfile(true);
-    try {
-      const profileDocRef = doc(firestore, 'settings', 'profile');
-      await setDoc(profileDocRef, { aboutImageUrl: profileImageUrl }, { merge: true });
-      
-      toast({
-        title: 'Profile Image Updated',
-        description: 'Your new profile image URL has been saved.',
+    const profileDocRef = doc(firestore, 'settings', 'profile');
+    
+    setDoc(profileDocRef, { aboutImageUrl: profileImageUrl }, { merge: true })
+      .then(() => {
+        toast({
+          title: 'Profile Image Updated',
+          description: 'Your new profile image URL has been saved.',
+        });
+      })
+      .catch((error) => {
+        console.error("Error saving profile image URL:", error);
+        const permissionError = new FirestorePermissionError({
+          path: profileDocRef.path,
+          operation: 'update',
+          requestResourceData: { aboutImageUrl: profileImageUrl },
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        toast({
+          title: 'Save Error',
+          description: error.message || 'Could not save the profile image URL.',
+          variant: 'destructive'
+        });
+      })
+      .finally(() => {
+        setIsSavingProfile(false);
       });
-
-    } catch (error: any) {
-      console.error("Error saving profile image URL:", error);
-      const permissionError = new FirestorePermissionError({
-        path: 'settings/profile',
-        operation: 'update',
-        requestResourceData: { aboutImageUrl: profileImageUrl },
-      });
-      errorEmitter.emit('permission-error', permissionError);
-
-      toast({
-        title: 'Save Error',
-        description: error.message || 'Could not save the profile image URL.',
-        variant: 'destructive'
-      });
-    } finally {
-      setIsSavingProfile(false);
-    }
   };
 
   const handleLogout = async () => {
@@ -269,6 +292,32 @@ export default function AdminDashboard() {
         });
     }
   };
+  
+  const openDeleteMessageDialog = (message: ContactMessage) => {
+    setMessageToDelete(message);
+    setIsDeleteMessageDialogOpen(true);
+  };
+  
+  const handleDeleteMessage = () => {
+    if (messageToDelete && firestore) {
+      const messageRef = doc(firestore, 'contact_messages', messageToDelete.id);
+      deleteDoc(messageRef)
+        .then(() => {
+          toast({ title: 'Message Deleted', description: 'The message has been removed.', variant: 'destructive' });
+          setIsDeleteMessageDialogOpen(false);
+          setMessageToDelete(null);
+        })
+        .catch(error => {
+          errorEmitter.emit(
+            'permission-error',
+            new FirestorePermissionError({
+              path: messageRef.path,
+              operation: 'delete',
+            })
+          );
+        });
+    }
+  };
 
   if (isUserLoading || !user) {
     return (
@@ -277,6 +326,11 @@ export default function AdminDashboard() {
       </div>
     );
   }
+  
+  const formatDate = (timestamp: ContactMessage['timestamp']) => {
+    if (!timestamp) return 'N/A';
+    return new Date(timestamp.seconds * 1000).toLocaleString();
+  };
 
   return (
     <>
@@ -424,7 +478,72 @@ export default function AdminDashboard() {
         </Card>
       </div>
 
-      {/* Add/Edit Dialog */}
+       <Card className="mt-4">
+        <CardHeader>
+          <CardTitle>Contact Messages</CardTitle>
+          <CardDescription>
+            View messages submitted through your contact form.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ScrollArea className="h-96">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Message</TableHead>
+                  <TableHead>
+                    <span className="sr-only">Actions</span>
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoadingMessages ? (
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <TableRow key={i}>
+                      <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                      <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                      <TableCell><Skeleton className="h-4 w-40" /></TableCell>
+                      <TableCell><Skeleton className="h-4 w-full" /></TableCell>
+                      <TableCell><Skeleton className="h-8 w-8" /></TableCell>
+                    </TableRow>
+                  ))
+                ) : messages?.length ? (
+                  messages.map(message => (
+                    <TableRow key={message.id}>
+                      <TableCell className="font-medium whitespace-nowrap">{formatDate(message.timestamp)}</TableCell>
+                      <TableCell>{message.name}</TableCell>
+                      <TableCell>{message.email}</TableCell>
+                      <TableCell className="max-w-md truncate">{message.message}</TableCell>
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => openDeleteMessageDialog(message)}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                          <span className="sr-only">Delete message</span>
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center">
+                      No messages received yet.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </ScrollArea>
+        </CardContent>
+      </Card>
+
+
+      {/* Add/Edit Project Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={(isOpen) => { setIsDialogOpen(isOpen); if (!isOpen) setCurrentProject(null); }}>
         <DialogContent className="sm:max-w-2xl flex flex-col max-h-[90vh]">
            <DialogHeader>
@@ -470,7 +589,7 @@ export default function AdminDashboard() {
         </DialogContent>
       </Dialog>
       
-      {/* Delete Confirmation Dialog */}
+      {/* Delete Project Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -485,6 +604,26 @@ export default function AdminDashboard() {
               Cancel
             </Button>
             <Button variant="destructive" onClick={handleDeleteProject}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Message Confirmation Dialog */}
+      <Dialog open={isDeleteMessageDialogOpen} onOpenChange={setIsDeleteMessageDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Message?</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to permanently delete this message? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDeleteMessageDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteMessage}>
               Delete
             </Button>
           </DialogFooter>
