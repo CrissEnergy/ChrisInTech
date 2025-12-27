@@ -1,19 +1,21 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, ChangeEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { MoreHorizontal, PlusCircle } from 'lucide-react';
-import { collection, doc, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { MoreHorizontal, PlusCircle, UploadCloud } from 'lucide-react';
+import { collection, doc, addDoc, updateDoc, deleteDoc, setDoc } from 'firebase/firestore';
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 import {
   useFirebase,
   useCollection,
-  useMemoFirebase
+  useMemoFirebase,
+  useDoc
 } from '@/firebase';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -73,6 +75,9 @@ const technologyOptions: Option[] = [
   { value: 'EViews', label: 'EViews' },
 ];
 
+type SiteProfile = {
+  aboutImageUrl: string;
+};
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -84,6 +89,18 @@ export default function AdminDashboard() {
     [firestore]
   );
   const { data: projects, isLoading: isLoadingProjects } = useCollection<Project>(projectsCollection);
+
+  const profileSettingsDoc = useMemoFirebase(
+    () => (firestore ? doc(firestore, 'settings', 'profile') : null),
+    [firestore]
+  );
+  const { data: profileSettings, isLoading: isLoadingProfile } = useDoc<SiteProfile>(profileSettingsDoc);
+  
+  const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
+  const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null);
+  const [isUploadingProfile, setIsUploadingProfile] = useState(false);
+  const profileFileInputRef = useRef<HTMLInputElement>(null);
+
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -105,6 +122,55 @@ export default function AdminDashboard() {
       setSelectedTechnologies([]);
     }
   }, [currentProject, isDialogOpen]);
+
+  useEffect(() => {
+    if (profileSettings) {
+      setProfileImagePreview(profileSettings.aboutImageUrl);
+    }
+  }, [profileSettings]);
+
+  const handleProfileImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setProfileImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfileImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleProfileImageUpload = async () => {
+    if (!profileImageFile || !firestore) return;
+
+    setIsUploadingProfile(true);
+    try {
+      const storage = getStorage();
+      const imageRef = storageRef(storage, `profileImages/${user?.uid || 'default'}/${profileImageFile.name}`);
+      const snapshot = await uploadBytes(imageRef, profileImageFile);
+      const downloadURL = await getDownloadURL(snapshot.ref);
+
+      const profileDocRef = doc(firestore, 'settings', 'profile');
+      await setDoc(profileDocRef, { aboutImageUrl: downloadURL }, { merge: true });
+      
+      toast({
+        title: 'Profile Image Updated',
+        description: 'Your new profile image has been saved.',
+      });
+      setProfileImageFile(null);
+
+    } catch (error: any) {
+      console.error("Error uploading profile image:", error);
+      toast({
+        title: 'Upload Error',
+        description: error.message || 'Could not upload the profile image.',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsUploadingProfile(false);
+    }
+  };
 
   const handleLogout = async () => {
     if (auth) {
@@ -239,90 +305,139 @@ export default function AdminDashboard() {
           </Button>
         </div>
       </div>
-      <Card>
-        <CardHeader>
-          <CardTitle>Projects</CardTitle>
-          <CardDescription>
-            Manage your projects. Add, edit, or delete projects from your portfolio.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="hidden w-[100px] sm:table-cell">
-                  <span className="sr-only">Image</span>
-                </TableHead>
-                <TableHead>Title</TableHead>
-                <TableHead>Technologies</TableHead>
-                <TableHead className="hidden md:table-cell">Description</TableHead>
-                <TableHead>
-                  <span className="sr-only">Actions</span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoadingProjects ? (
-                Array.from({ length: 3 }).map((_, i) => (
-                  <TableRow key={i}>
-                    <TableCell className="hidden sm:table-cell">
-                      <Skeleton className="h-16 w-16 rounded-md" />
-                    </TableCell>
-                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-48" /></TableCell>
-                    <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-full" /></TableCell>
-                    <TableCell><Skeleton className="h-8 w-8" /></TableCell>
-                  </TableRow>
-                ))
-              ) : projects?.length ? (
-                projects.map(project => (
-                  <TableRow key={project.id}>
-                    <TableCell className="hidden sm:table-cell">
-                      <Image
-                        alt={project.title}
-                        className="aspect-square rounded-md object-cover"
-                        height="64"
-                        src={project.imageUrl || '/placeholder.svg'}
-                        width="64"
-                      />
-                    </TableCell>
-                    <TableCell className="font-medium">{project.title}</TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1">
-                        {project.technologies.map(tech => (
-                          <Badge key={tech} variant="outline">{tech}</Badge>
-                        ))}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7 mt-4">
+        <Card className="lg:col-span-2">
+            <CardHeader>
+                <CardTitle>Profile Settings</CardTitle>
+                <CardDescription>Update your public profile picture.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>Profile Image</Label>
+                       <div
+                        className="relative flex cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/50 p-4 text-center hover:bg-muted"
+                        onClick={() => profileFileInputRef.current?.click()}
+                      >
+                        <input
+                          type="file"
+                          accept="image/*"
+                          ref={profileFileInputRef}
+                          onChange={handleProfileImageChange}
+                          className="hidden"
+                        />
+                        {profileImagePreview ? (
+                          <Image
+                            src={profileImagePreview}
+                            alt="Profile preview"
+                            width={160}
+                            height={160}
+                            className="h-40 w-40 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                            <UploadCloud className="h-10 w-10" />
+                            <span>Click to upload image</span>
+                          </div>
+                        )}
                       </div>
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell max-w-sm truncate">
-                      {project.description}
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button aria-haspopup="true" size="icon" variant="ghost">
-                            <MoreHorizontal className="h-4 w-4" />
-                            <span className="sr-only">Toggle menu</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem onClick={() => openEditDialog(project)}>Edit</DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive" onClick={() => openDeleteDialog(project)}>Delete</DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center">No projects found. Add one to get started!</TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+                    </div>
+                </div>
+            </CardContent>
+             <CardFooter>
+                <Button
+                  onClick={handleProfileImageUpload}
+                  disabled={isUploadingProfile || !profileImageFile}
+                >
+                  {isUploadingProfile ? 'Uploading...' : 'Save Profile Image'}
+                </Button>
+              </CardFooter>
+        </Card>
+        <Card className="lg:col-span-5">
+            <CardHeader>
+                <CardTitle>Projects</CardTitle>
+                <CardDescription>
+                    Manage your projects. Add, edit, or delete projects from your portfolio.
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Table>
+                    <TableHeader>
+                    <TableRow>
+                        <TableHead className="hidden w-[100px] sm:table-cell">
+                        <span className="sr-only">Image</span>
+                        </TableHead>
+                        <TableHead>Title</TableHead>
+                        <TableHead>Technologies</TableHead>
+                        <TableHead className="hidden md:table-cell">Description</TableHead>
+                        <TableHead>
+                        <span className="sr-only">Actions</span>
+                        </TableHead>
+                    </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                    {isLoadingProjects ? (
+                        Array.from({ length: 3 }).map((_, i) => (
+                        <TableRow key={i}>
+                            <TableCell className="hidden sm:table-cell">
+                            <Skeleton className="h-16 w-16 rounded-md" />
+                            </TableCell>
+                            <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                            <TableCell><Skeleton className="h-4 w-48" /></TableCell>
+                            <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-full" /></TableCell>
+                            <TableCell><Skeleton className="h-8 w-8" /></TableCell>
+                        </TableRow>
+                        ))
+                    ) : projects?.length ? (
+                        projects.map(project => (
+                        <TableRow key={project.id}>
+                            <TableCell className="hidden sm:table-cell">
+                            <Image
+                                alt={project.title}
+                                className="aspect-square rounded-md object-cover"
+                                height="64"
+                                src={project.imageUrl || '/placeholder.svg'}
+                                width="64"
+                            />
+                            </TableCell>
+                            <TableCell className="font-medium">{project.title}</TableCell>
+                            <TableCell>
+                            <div className="flex flex-wrap gap-1">
+                                {project.technologies.map(tech => (
+                                <Badge key={tech} variant="outline">{tech}</Badge>
+                                ))}
+                            </div>
+                            </TableCell>
+                            <TableCell className="hidden md:table-cell max-w-sm truncate">
+                            {project.description}
+                            </TableCell>
+                            <TableCell>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                <Button aria-haspopup="true" size="icon" variant="ghost">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                    <span className="sr-only">Toggle menu</span>
+                                </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                <DropdownMenuItem onClick={() => openEditDialog(project)}>Edit</DropdownMenuItem>
+                                <DropdownMenuItem className="text-destructive" onClick={() => openDeleteDialog(project)}>Delete</DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                            </TableCell>
+                        </TableRow>
+                        ))
+                    ) : (
+                        <TableRow>
+                        <TableCell colSpan={5} className="text-center">No projects found. Add one to get started!</TableCell>
+                        </TableRow>
+                    )}
+                    </TableBody>
+                </Table>
+            </CardContent>
+        </Card>
+      </div>
 
       {/* Add/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={(isOpen) => { setIsDialogOpen(isOpen); if (!isOpen) setCurrentProject(null); }}>

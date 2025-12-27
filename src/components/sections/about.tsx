@@ -1,9 +1,23 @@
+'use client';
+
 import Image from 'next/image';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { doc } from 'firebase/firestore';
+import { useFirebase, useDoc, useMemoFirebase } from '@/firebase';
 import { AnimateOnScroll } from '@/components/animate-on-scroll';
+import { Skeleton } from '@/components/ui/skeleton';
+
+type SiteProfile = {
+  aboutImageUrl: string;
+};
 
 export function About() {
-  const headshot = PlaceHolderImages.find(p => p.id === 'chris-headshot');
+  const { firestore } = useFirebase();
+
+  const profileSettingsDoc = useMemoFirebase(
+    () => (firestore ? doc(firestore, 'settings', 'profile') : null),
+    [firestore]
+  );
+  const { data: profileSettings, isLoading } = useDoc<SiteProfile>(profileSettingsDoc);
 
   return (
     <section id="about" className="w-full py-20 lg:py-32">
@@ -18,12 +32,13 @@ export function About() {
             </p>
           </div>
           <div className="flex justify-center">
-            {headshot && (
-              <div className="p-1.5 bg-gradient-to-tr from-primary to-secondary rounded-full">
+            {isLoading ? (
+               <Skeleton className="h-[400px] w-[400px] rounded-full" />
+            ) : (
+               <div className="p-1.5 bg-gradient-to-tr from-primary to-secondary rounded-full">
                 <Image
-                  src={headshot.imageUrl}
-                  alt={headshot.description}
-                  data-ai-hint={headshot.imageHint}
+                  src={profileSettings?.aboutImageUrl || "https://picsum.photos/seed/1/400/400"}
+                  alt={"Chris's headshot"}
                   width={400}
                   height={400}
                   className="rounded-full object-cover shadow-2xl"

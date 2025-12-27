@@ -122,10 +122,21 @@ service cloud.firestore {
     match /roles_admin/{userId} {
       allow get: if isAdmin();
       allow list: if isAdmin();
-      // Allow a user to create their own admin role doc, or allow an existing admin to create one.
-      allow create: if request.auth.uid == userId || isAdmin();
+      allow create: if request.auth.uid == userId;
       allow update: if false;
       allow delete: if isAdmin();
+    }
+
+     /**
+     * @description Stores global site settings, like the profile image.
+     * Read access is public, but write access is restricted to admins.
+     * @path /settings/profile
+     * @principle Allows public read for site content while securing management.
+     */
+    match /settings/{docId} {
+      allow get: if true;
+      allow list: if true;
+      allow create, update, delete: if isAdmin();
     }
   }
 }
