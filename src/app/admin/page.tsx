@@ -4,6 +4,15 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { MoreHorizontal, PlusCircle } from 'lucide-react';
+import { collection, doc } from 'firebase/firestore';
+import {
+  useFirebase,
+  useCollection,
+  useMemoFirebase,
+  addDocumentNonBlocking,
+  updateDocumentNonBlocking,
+  deleteDocumentNonBlocking,
+} from '@/firebase';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -30,68 +39,76 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogClose,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 
-import { mockProjects, type Project } from '@/lib/mock-data';
 import { useToast } from '@/hooks/use-toast';
+import type { Project } from '@/lib/mock-data';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function AdminDashboard() {
   const router = useRouter();
   const { toast } = useToast();
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { firestore, auth, user, isUserLoading } = useFirebase();
+
+  const projectsCollection = useMemoFirebase(
+    () => (firestore ? collection(firestore, 'projects') : null),
+    [firestore]
+  );
+  const { data: projects, isLoading: isLoadingProjects } = useCollection<Project>(projectsCollection);
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
   const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
 
   useEffect(() => {
-    const isAuthenticated = sessionStorage.getItem('isAdminAuthenticated') === 'true';
-    if (!isAuthenticated) {
+    if (!isUserLoading && !user) {
       router.push('/admin/login');
-    } else {
-      setProjects(mockProjects);
-      setIsLoading(false);
     }
-  }, [router]);
+  }, [user, isUserLoading, router]);
 
-  const handleLogout = () => {
-    sessionStorage.removeItem('isAdminAuthenticated');
-    router.push('/admin/login');
-    toast({
-      title: 'Logged Out',
-      description: 'You have been successfully logged out.',
-    });
+  const handleLogout = async () => {
+    if (auth) {
+      await auth.signOut();
+      router.push('/admin/login');
+      toast({
+        title: 'Logged Out',
+        description: 'You have been successfully logged out.',
+      });
+    }
   };
-  
+
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!firestore) return;
+
     const formData = new FormData(e.currentTarget);
-    const newProject: Project = {
-      id: currentProject ? currentProject.id : `project-${Date.now()}`,
+    const projectData = {
       title: formData.get('title') as string,
       description: formData.get('description') as string,
       technologies: (formData.get('technologies') as string).split(',').map(t => t.trim()),
       liveLink: formData.get('liveLink') as string,
       githubLink: formData.get('githubLink') as string,
-      imageUrl: currentProject?.imageUrl || 'https://picsum.photos/seed/picsum/400/300',
+      // Keep existing image or use a placeholder
+      imageUrl: currentProject?.imageUrl || `https://picsum.photos/seed/${Date.now()}/400/300`,
     };
 
     if (currentProject) {
       // Update project
-      setProjects(projects.map(p => p.id === newProject.id ? newProject : p));
-      toast({ title: "Project Updated", description: `${newProject.title} has been successfully updated.` });
+      const projectRef = doc(firestore, 'projects', currentProject.id);
+      updateDocumentNonBlocking(projectRef, projectData);
+      toast({ title: 'Project Updated', description: `${projectData.title} has been successfully updated.` });
     } else {
       // Add new project
-      setProjects([newProject, ...projects]);
-      toast({ title: "Project Added", description: `${newProject.title} has been successfully added.` });
+      const projectsColRef = collection(firestore, 'projects');
+      addDocumentNonBlocking(projectsColRef, projectData);
+      toast({ title: 'Project Added', description: `${projectData.title} has been successfully added.` });
     }
-    
+
     setIsDialogOpen(false);
     setCurrentProject(null);
   };
@@ -110,25 +127,24 @@ export default function AdminDashboard() {
     setProjectToDelete(project);
     setIsDeleteDialogOpen(true);
   };
-  
+
   const handleDeleteProject = () => {
-    if (projectToDelete) {
-      setProjects(projects.filter(p => p.id !== projectToDelete.id));
-      toast({ title: "Project Deleted", description: `${projectToDelete.title} has been removed.`, variant: 'destructive' });
+    if (projectToDelete && firestore) {
+      const projectRef = doc(firestore, 'projects', projectToDelete.id);
+      deleteDocumentNonBlocking(projectRef);
+      toast({ title: 'Project Deleted', description: `${projectToDelete.title} has been removed.`, variant: 'destructive' });
       setIsDeleteDialogOpen(false);
       setProjectToDelete(null);
     }
   };
 
-
-  if (isLoading) {
+  if (isUserLoading || !user) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p>Loading...</p>
+      <div className="flex min-h-dvh items-center justify-center">
+        <p>Loading user data...</p>
       </div>
     );
   }
-  
 
   return (
     <>
@@ -166,52 +182,70 @@ export default function AdminDashboard() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {projects.map(project => (
-                <TableRow key={project.id}>
-                  <TableCell className="hidden sm:table-cell">
-                    <Image
-                      alt={project.title}
-                      className="aspect-square rounded-md object-cover"
-                      height="64"
-                      src={project.imageUrl || "/placeholder.svg"}
-                      width="64"
-                    />
-                  </TableCell>
-                  <TableCell className="font-medium">{project.title}</TableCell>
-                   <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      {project.technologies.map(tech => (
-                        <Badge key={tech} variant="outline">{tech}</Badge>
-                      ))}
-                    </div>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell max-w-sm truncate">
-                    {project.description}
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button aria-haspopup="true" size="icon" variant="ghost">
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Toggle menu</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => openEditDialog(project)}>Edit</DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive" onClick={() => openDeleteDialog(project)}>Delete</DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
+              {isLoadingProjects ? (
+                Array.from({ length: 3 }).map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell className="hidden sm:table-cell">
+                      <Skeleton className="h-16 w-16 rounded-md" />
+                    </TableCell>
+                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-48" /></TableCell>
+                    <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-full" /></TableCell>
+                    <TableCell><Skeleton className="h-8 w-8" /></TableCell>
+                  </TableRow>
+                ))
+              ) : projects?.length ? (
+                projects.map(project => (
+                  <TableRow key={project.id}>
+                    <TableCell className="hidden sm:table-cell">
+                      <Image
+                        alt={project.title}
+                        className="aspect-square rounded-md object-cover"
+                        height="64"
+                        src={project.imageUrl || '/placeholder.svg'}
+                        width="64"
+                      />
+                    </TableCell>
+                    <TableCell className="font-medium">{project.title}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        {project.technologies.map(tech => (
+                          <Badge key={tech} variant="outline">{tech}</Badge>
+                        ))}
+                      </div>
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell max-w-sm truncate">
+                      {project.description}
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button aria-haspopup="true" size="icon" variant="ghost">
+                            <MoreHorizontal className="h-4 w-4" />
+                            <span className="sr-only">Toggle menu</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <DropdownMenuItem onClick={() => openEditDialog(project)}>Edit</DropdownMenuItem>
+                          <DropdownMenuItem className="text-destructive" onClick={() => openDeleteDialog(project)}>Delete</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center">No projects found. Add one to get started!</TableCell>
                 </TableRow>
-              ))}
+              )}
             </TableBody>
           </Table>
         </CardContent>
       </Card>
 
       {/* Add/Edit Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <Dialog open={isDialogOpen} onOpenChange={(isOpen) => { setIsDialogOpen(isOpen); if (!isOpen) setCurrentProject(null); }}>
         <DialogContent className="sm:max-w-[525px]">
           <form onSubmit={handleFormSubmit}>
             <DialogHeader>
@@ -233,18 +267,18 @@ export default function AdminDashboard() {
                 <Label htmlFor="technologies" className="text-right">Technologies</Label>
                 <Input id="technologies" name="technologies" placeholder="React, Node.js, etc." defaultValue={currentProject?.technologies.join(', ')} className="col-span-3" required />
               </div>
-               <div className="grid grid-cols-4 items-center gap-4">
+              <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="liveLink" className="text-right">Live URL</Label>
                 <Input id="liveLink" name="liveLink" defaultValue={currentProject?.liveLink} className="col-span-3" />
               </div>
-               <div className="grid grid-cols-4 items-center gap-4">
+              <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="githubLink" className="text-right">GitHub URL</Label>
                 <Input id="githubLink" name="githubLink" defaultValue={currentProject?.githubLink} className="col-span-3" />
               </div>
             </div>
             <DialogFooter>
               <DialogClose asChild>
-                  <Button type="button" variant="secondary">Cancel</Button>
+                <Button type="button" variant="secondary">Cancel</Button>
               </DialogClose>
               <Button type="submit">{currentProject ? 'Save Changes' : 'Add Project'}</Button>
             </DialogFooter>
@@ -253,7 +287,7 @@ export default function AdminDashboard() {
       </Dialog>
       
       {/* Delete Confirmation Dialog */}
-       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Are you sure?</DialogTitle>
