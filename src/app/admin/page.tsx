@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { MoreHorizontal, PlusCircle } from 'lucide-react';
 import { collection, doc, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import {
   useFirebase,
   useCollection,
@@ -45,7 +44,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import type { Project } from '@/lib/mock-data';
-import { getStorage } from 'firebase/storage';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { MultiSelect, type Option } from '@/components/ui/multi-select';
@@ -79,8 +77,7 @@ const technologyOptions: Option[] = [
 export default function AdminDashboard() {
   const router = useRouter();
   const { toast } = useToast();
-  const { firestore, auth, user, isUserLoading, firebaseApp } = useFirebase();
-  const storage = firebaseApp ? getStorage(firebaseApp) : null;
+  const { firestore, auth, user, isUserLoading } = useFirebase();
 
   const projectsCollection = useMemoFirebase(
     () => (firestore ? collection(firestore, 'projects') : null),
@@ -93,8 +90,6 @@ export default function AdminDashboard() {
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
   const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
   const [selectedTechnologies, setSelectedTechnologies] = useState<string[]>([]);
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -106,12 +101,9 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (currentProject) {
       setSelectedTechnologies(currentProject.technologies || []);
-      setImagePreview(currentProject.imageUrl || null);
     } else {
       setSelectedTechnologies([]);
-      setImagePreview(null);
     }
-    setImageFile(null);
   }, [currentProject, isDialogOpen]);
 
   const handleLogout = async () => {
@@ -125,34 +117,22 @@ export default function AdminDashboard() {
     }
   };
   
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setImageFile(file);
-      setImagePreview(URL.createObjectURL(file));
-    }
-  };
-
   const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!firestore || !storage || isSubmitting) return;
+    if (!firestore || isSubmitting) return;
 
     setIsSubmitting(true);
-    let imageUrl = currentProject?.imageUrl || `https://picsum.photos/seed/${Date.now()}/400/300`;
+    
+    const formData = new FormData(e.currentTarget);
+    const liveLink = formData.get('liveLink') as string;
+    const imageUrl = `https://s.wordpress.com/mshots/v1/${encodeURIComponent(liveLink)}?w=400&h=300`;
 
     try {
-        if (imageFile) {
-            const imageRef = ref(storage, `projects/${Date.now()}_${imageFile.name}`);
-            await uploadBytes(imageRef, imageFile);
-            imageUrl = await getDownloadURL(imageRef);
-        }
-
-        const formData = new FormData(e.currentTarget);
         const projectData = {
           title: formData.get('title') as string,
           description: formData.get('description') as string,
           technologies: selectedTechnologies,
-          liveLink: formData.get('liveLink') as string,
+          liveLink: liveLink,
           imageUrl: imageUrl,
         };
 
@@ -373,21 +353,10 @@ export default function AdminDashboard() {
                     className="w-full"
                   />
                 </div>
-
-                <div className="space-y-2">
-                  <Label>Project Image</Label>
-                  <div className="flex items-center gap-4">
-                      {imagePreview && <Image src={imagePreview} alt="Project preview" width={80} height={80} className="rounded-md object-cover" />}
-                      <Input id="image" name="image" type="file" onChange={handleImageChange} accept="image/*" className="w-full" />
-                  </div>
-                </div>
-
-                <div className="grid md:grid-cols-1 gap-4">
-                  <div className="space-y-2">
+                 <div className="space-y-2">
                       <Label htmlFor="liveLink">Live URL</Label>
-                      <Input id="liveLink" name="liveLink" defaultValue={currentProject?.liveLink} />
+                      <Input id="liveLink" name="liveLink" defaultValue={currentProject?.liveLink} placeholder="https://example.com" required/>
                   </div>
-                </div>
               </form>
             </div>
             <DialogFooter className="pt-4 border-t">

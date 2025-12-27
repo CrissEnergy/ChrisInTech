@@ -38,19 +38,19 @@ export function Projects() {
             Array.from({ length: 3 }).map((_, index) => (
               <AnimateOnScroll key={index} delay={index * 100}>
                 <Card className="flex h-full flex-col overflow-hidden">
-                  <CardHeader className="items-center text-center">
-                    <Skeleton className="mb-4 h-32 w-32 rounded-full" />
-                    <Skeleton className="h-6 w-3/4" />
-                    <Skeleton className="mt-2 h-4 w-full" />
+                   <CardHeader className="p-0">
+                    <Skeleton className="aspect-[4/3] w-full" />
                   </CardHeader>
-                  <CardContent className="flex-grow">
-                    <div className="flex flex-wrap justify-center gap-2">
-                      <Skeleton className="h-6 w-20 rounded-full" />
-                      <Skeleton className="h-6 w-20 rounded-full" />
-                      <Skeleton className="h-6 w-20 rounded-full" />
-                    </div>
+                  <CardContent className="flex-grow p-6">
+                     <Skeleton className="mb-2 h-6 w-3/4" />
+                     <Skeleton className="h-4 w-full" />
+                     <div className="mt-4 flex flex-wrap justify-start gap-2">
+                        <Skeleton className="h-6 w-20 rounded-full" />
+                        <Skeleton className="h-6 w-20 rounded-full" />
+                        <Skeleton className="h-6 w-20 rounded-full" />
+                      </div>
                   </CardContent>
-                  <CardFooter className="justify-center space-x-4">
+                  <CardFooter className="justify-start">
                     <Skeleton className="h-10 w-24" />
                   </CardFooter>
                 </Card>
@@ -60,27 +60,27 @@ export function Projects() {
             projects.map((project, index) => (
               <AnimateOnScroll key={project.id} delay={index * 100}>
                 <Card className="flex h-full flex-col overflow-hidden">
-                  <CardHeader className="items-center text-center">
-                    <div className="mb-4 rounded-full bg-gradient-to-tr from-primary/20 to-secondary/20 p-1.5">
+                   <CardHeader className="p-0">
+                    <Link href={project.liveLink} target="_blank">
                       <Image
                         src={project.imageUrl}
                         alt={project.title}
-                        width={128}
-                        height={128}
-                        className="h-32 w-32 rounded-full object-cover shadow-lg"
+                        width={400}
+                        height={300}
+                        className="w-full object-cover transition-transform duration-300 group-hover:scale-105"
                       />
-                    </div>
-                    <CardTitle>{project.title}</CardTitle>
-                    <CardDescription>{project.description}</CardDescription>
+                    </Link>
                   </CardHeader>
-                  <CardContent className="flex-grow">
-                    <div className="flex flex-wrap justify-center gap-2">
+                  <CardContent className="flex-grow p-6">
+                    <CardTitle>{project.title}</CardTitle>
+                    <CardDescription className="mt-2">{project.description}</CardDescription>
+                     <div className="mt-4 flex flex-wrap gap-2">
                       {project.technologies.map(tech => (
                         <Badge key={tech} variant="secondary">{tech}</Badge>
                       ))}
                     </div>
                   </CardContent>
-                  <CardFooter className="justify-center space-x-4">
+                  <CardFooter>
                     <Button asChild>
                       <Link href={project.liveLink} target="_blank">Live Now</Link>
                     </Button>
