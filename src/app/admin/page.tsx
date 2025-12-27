@@ -126,15 +126,14 @@ export default function AdminDashboard() {
   }, [currentProject, isDialogOpen]);
 
   useEffect(() => {
-    if (profileSettings) {
+    if (profileSettings?.aboutImageUrl && !profileImageFile) {
       setProfileImagePreview(profileSettings.aboutImageUrl);
     }
-  }, [profileSettings]);
+  }, [profileSettings, profileImageFile]);
 
   const handleProfileImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setProfileImageFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setProfileImagePreview(reader.result as string);
@@ -161,8 +160,8 @@ export default function AdminDashboard() {
         title: 'Profile Image Updated',
         description: 'Your new profile image has been saved.',
       });
-      setProfileImageFile(null);
-      setProfileImagePreview(downloadURL);
+      setProfileImageFile(null); // Clear the original file
+      setProfileImagePreview(downloadURL); // Set preview to the final URL
 
     } catch (error: any) {
       console.error("Error uploading profile image:", error);
@@ -174,6 +173,9 @@ export default function AdminDashboard() {
     } finally {
       setIsUploadingProfile(false);
       setIsCropperOpen(false);
+       if (profileFileInputRef.current) {
+        profileFileInputRef.current.value = '';
+      }
     }
   };
 
@@ -299,12 +301,17 @@ export default function AdminDashboard() {
 
   return (
     <>
-       {profileImagePreview && (
+       {profileImagePreview && isCropperOpen && (
         <ImageCropperDialog
           isOpen={isCropperOpen}
           onClose={() => {
-            setIsCropperOpen(false)
-            setProfileImageFile(null)
+            setIsCropperOpen(false);
+            setProfileImageFile(null);
+            // Revert preview to original if crop is cancelled
+            setProfileImagePreview(profileSettings?.aboutImageUrl || null); 
+             if (profileFileInputRef.current) {
+               profileFileInputRef.current.value = '';
+            }
           }}
           image={profileImagePreview}
           onSave={handleProfileImageUpload}
@@ -346,9 +353,9 @@ export default function AdminDashboard() {
                         />
                         {isLoadingProfile ? (
                             <Skeleton className="h-40 w-40 rounded-full" />
-                        ) : profileSettings?.aboutImageUrl ? (
+                        ) : profileImagePreview ? (
                           <Image
-                            src={profileSettings.aboutImageUrl}
+                            src={profileImagePreview}
                             alt="Profile preview"
                             width={160}
                             height={160}
@@ -520,3 +527,5 @@ export default function AdminDashboard() {
     </>
   );
 }
+
+    
