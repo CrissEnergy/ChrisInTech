@@ -7,14 +7,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/firebase';
+import { useFirebase } from '@/firebase';
 import { signInAnonymously } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
+
 
 const MAGIC_CODE = '0596352632';
 
 export default function LoginPage() {
   const router = useRouter();
-  const auth = useAuth();
+  const { auth, firestore } = useFirebase();
   const { toast } = useToast();
   
   const [magicCode, setMagicCode] = useState('');
@@ -40,19 +44,36 @@ export default function LoginPage() {
       return;
     }
 
-    if (!auth) {
-      toast({ variant: 'destructive', title: 'Authentication Error', description: 'Firebase auth service is not available.' });
+    if (!auth || !firestore) {
+      toast({ variant: 'destructive', title: 'Authentication Error', description: 'Firebase services are not available.' });
       return;
     }
 
     setIsLoading(true);
     try {
-      // For this magic code system, we'll use anonymous sign-in.
-      // In a real-world scenario with multiple admins, you'd associate this
-      // anonymous user's UID with an admin role in your database.
-      await signInAnonymously(auth);
-      toast({ title: 'Login Successful', description: 'Redirecting to your dashboard...' });
-      router.push('/admin');
+      const userCredential = await signInAnonymously(auth);
+      const user = userCredential.user;
+      
+      // Add user to roles_admin collection to grant admin privileges
+      const adminRoleRef = doc(firestore, 'roles_admin', user.uid);
+      
+      setDoc(adminRoleRef, { isAdmin: true })
+        .then(() => {
+          toast({ title: 'Login Successful', description: 'Redirecting to your dashboard...' });
+          router.push('/admin');
+        })
+        .catch(error => {
+           errorEmitter.emit(
+                'permission-error',
+                new FirestorePermissionError({
+                  path: adminRoleRef.path,
+                  operation: 'create',
+                  requestResourceData: { isAdmin: true },
+                })
+            );
+            handleAuthError(error, 'Permission Setup Failed');
+        });
+
     } catch (error: any) {
       handleAuthError(error, 'Sign In Failed');
     } finally {
