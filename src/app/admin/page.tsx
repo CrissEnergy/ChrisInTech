@@ -43,7 +43,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import type { Project } from '@/lib/mock-data';
 import { getStorage } from 'firebase/storage';
@@ -348,57 +347,55 @@ export default function AdminDashboard() {
 
       {/* Add/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={(isOpen) => { setIsDialogOpen(isOpen); if (!isOpen) setCurrentProject(null); }}>
-        <DialogContent className="sm:max-w-2xl">
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col">
            <DialogHeader>
               <DialogTitle>{currentProject ? 'Edit Project' : 'Add New Project'}</DialogTitle>
               <DialogDescription>
                 {currentProject ? 'Update the details of your project.' : 'Fill in the details for your new project.'}
               </DialogDescription>
             </DialogHeader>
-            <form id="project-form" onSubmit={handleFormSubmit}>
-              <ScrollArea className="max-h-[60vh] p-4">
-                <div className="grid gap-6">
-                  <div className="space-y-2">
-                      <Label htmlFor="title">Title</Label>
-                      <Input id="title" name="title" defaultValue={currentProject?.title} required />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="description">Description</Label>
-                    <Textarea id="description" name="description" defaultValue={currentProject?.description} required />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Technologies</Label>
-                    <MultiSelect
-                      options={technologyOptions}
-                      onValueChange={setSelectedTechnologies}
-                      defaultValue={selectedTechnologies}
-                      placeholder="Select technologies"
-                      className="w-full"
-                    />
-                  </div>
+            <div className="flex-grow overflow-y-auto px-6 py-2">
+              <form id="project-form" onSubmit={handleFormSubmit} className="grid gap-6">
+                <div className="space-y-2">
+                    <Label htmlFor="title">Title</Label>
+                    <Input id="title" name="title" defaultValue={currentProject?.title} required />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea id="description" name="description" defaultValue={currentProject?.description} required />
+                </div>
+                <div className="space-y-2">
+                  <Label>Technologies</Label>
+                  <MultiSelect
+                    options={technologyOptions}
+                    onValueChange={setSelectedTechnologies}
+                    defaultValue={selectedTechnologies}
+                    placeholder="Select technologies"
+                    className="w-full"
+                  />
+                </div>
 
-                  <div className="space-y-2">
-                    <Label>Project Image</Label>
-                    <div className="flex items-center gap-4">
-                        {imagePreview && <Image src={imagePreview} alt="Project preview" width={80} height={80} className="rounded-md object-cover" />}
-                        <Input id="image" name="image" type="file" onChange={handleImageChange} accept="image/*" className="w-full" />
-                    </div>
-                  </div>
-
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="liveLink">Live URL</Label>
-                        <Input id="liveLink" name="liveLink" defaultValue={currentProject?.liveLink} />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="githubLink">GitHub URL</Label>
-                        <Input id="githubLink" name="githubLink" defaultValue={currentProject?.githubLink} />
-                    </div>
+                <div className="space-y-2">
+                  <Label>Project Image</Label>
+                  <div className="flex items-center gap-4">
+                      {imagePreview && <Image src={imagePreview} alt="Project preview" width={80} height={80} className="rounded-md object-cover" />}
+                      <Input id="image" name="image" type="file" onChange={handleImageChange} accept="image/*" className="w-full" />
                   </div>
                 </div>
-              </ScrollArea>
-            </form>
-            <DialogFooter className="pt-4 border-t">
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                      <Label htmlFor="liveLink">Live URL</Label>
+                      <Input id="liveLink" name="liveLink" defaultValue={currentProject?.liveLink} />
+                  </div>
+                  <div className="space-y-2">
+                      <Label htmlFor="githubLink">GitHub URL</Label>
+                      <Input id="githubLink" name="githubLink" defaultValue={currentProject?.githubLink} />
+                  </div>
+                </div>
+              </form>
+            </div>
+            <DialogFooter className="pt-4 border-t px-6 pb-6">
               <DialogClose asChild>
                 <Button type="button" variant="secondary" disabled={isSubmitting}>Cancel</Button>
               </DialogClose>
