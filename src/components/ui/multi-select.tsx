@@ -142,7 +142,7 @@ const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>(
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+        <PopoverContent className="w-[--radix-popover-trigger-width] p-0" style={{maxHeight: 'var(--radix-popover-content-available-height)', overflowY: 'auto'}}>
           <Command>
             <CommandInput placeholder="Search..." />
             <CommandList>
