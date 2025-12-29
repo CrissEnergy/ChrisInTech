@@ -12,8 +12,22 @@ const contactSchema = z.object({
 });
 
 const classInquirySchema = z.object({
-  name: z.string().min(2, { message: 'Name must be at least 2 characters long.' }),
-  email: z.string().email({ message: 'Please enter a valid email address.' }),
+  firstName: z.string().min(1, { message: "First name is required." }),
+  lastName: z.string().min(1, { message: "Last name is required." }),
+  email: z.string().email({ message: "A valid email is required." }),
+  phone: z.string().regex(/^\+233\d{9}$/, { message: "Phone number must be in +233XXXXXXXXX format." }),
+  city: z.string().min(1, { message: "City/Town is required." }),
+  region: z.string().min(1, { message: "Region is required." }),
+  course: z.enum(['web-fundamentals', 'wordpress-dev'], { required_error: "Please select a course." }),
+  schedule: z.enum(['weekend-mornings'], { required_error: "Please select a schedule." }),
+  startDate: z.string().min(1, { message: "Please select a start date." }),
+  skillLevel: z.enum(['beginner', 'intermediate', 'advanced'], { required_error: "Please select your skill level." }),
+  goals: z.array(z.string()).min(1, { message: "Please select at least one goal." }),
+  experience: z.string().optional(),
+  paymentMethod: z.enum(['mobile-money'], { required_error: "Please select a payment method." }),
+  howHeard: z.string().optional(),
+  questions: z.string().optional(),
+  newsletter: z.boolean().default(false),
 });
 
 
@@ -30,10 +44,7 @@ export type FormState = {
 
 export type ClassInquiryState = {
   message: string;
-  errors?: {
-    name?: string[];
-    email?: string[];
-  };
+  errors?: z.ZodError<z.infer<typeof classInquirySchema>>['flatten']['fieldErrors'];
   success: boolean;
 }
 
@@ -82,9 +93,24 @@ export async function submitClassInquiry(
   prevState: ClassInquiryState,
   formData: FormData
 ): Promise<ClassInquiryState> {
+
   const validatedFields = classInquirySchema.safeParse({
-    name: formData.get('name'),
+    firstName: formData.get('firstName'),
+    lastName: formData.get('lastName'),
     email: formData.get('email'),
+    phone: formData.get('phone'),
+    city: formData.get('city'),
+    region: formData.get('region'),
+    course: formData.get('course'),
+    schedule: formData.get('schedule'),
+    startDate: formData.get('startDate'),
+    skillLevel: formData.get('skillLevel'),
+    goals: formData.getAll('goals'),
+    experience: formData.get('experience'),
+    paymentMethod: formData.get('paymentMethod'),
+    howHeard: formData.get('howHeard'),
+    questions: formData.get('questions'),
+    newsletter: formData.get('newsletter') === 'on',
   });
 
   if (!validatedFields.success) {

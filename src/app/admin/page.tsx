@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { MoreHorizontal, PlusCircle, Trash2, Download } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Trash2, Download, Eye } from 'lucide-react';
 import { collection, doc, addDoc, updateDoc, deleteDoc, setDoc } from 'firebase/firestore';
 import {
   useFirebase,
@@ -53,6 +53,7 @@ import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { MultiSelect, type Option } from '@/components/ui/multi-select';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
 
 // Extend jsPDF with autoTable
 interface jsPDFWithAutoTable extends jsPDF {
@@ -102,13 +103,27 @@ type ContactMessage = {
 
 type ClassInquiry = {
   id: string;
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
+  phone: string;
+  city: string;
+  region: string;
+  course: 'web-fundamentals' | 'wordpress-dev';
+  schedule: 'weekend-mornings';
+  startDate: string;
+  skillLevel: 'beginner' | 'intermediate' | 'advanced';
+  goals: string[];
+  experience?: string;
+  paymentMethod: 'mobile-money';
+  howHeard?: string;
+  questions?: string;
+  newsletter: boolean;
   timestamp: {
     seconds: number;
     nanoseconds: number;
   } | null;
-}
+};
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -155,6 +170,8 @@ export default function AdminDashboard() {
 
   const [inquiryToDelete, setInquiryToDelete] = useState<ClassInquiry | null>(null);
   const [isDeleteInquiryDialogOpen, setIsDeleteInquiryDialogOpen] = useState(false);
+  const [selectedInquiry, setSelectedInquiry] = useState<ClassInquiry | null>(null);
+  const [isViewInquiryDialogOpen, setIsViewInquiryDialogOpen] = useState(false);
 
 
   useEffect(() => {
@@ -193,9 +210,23 @@ export default function AdminDashboard() {
     }
     const worksheet = XLSX.utils.json_to_sheet(
       inquiries.map(inquiry => ({
-        Name: inquiry.name,
-        Email: inquiry.email,
-        Date: formatDate(inquiry.timestamp),
+        'First Name': inquiry.firstName,
+        'Last Name': inquiry.lastName,
+        'Email': inquiry.email,
+        'Phone': inquiry.phone,
+        'City/Town': inquiry.city,
+        'Region': inquiry.region,
+        'Course': inquiry.course,
+        'Schedule': inquiry.schedule,
+        'Start Date': inquiry.startDate,
+        'Skill Level': inquiry.skillLevel,
+        'Goals': inquiry.goals.join(', '),
+        'Experience': inquiry.experience,
+        'Payment Method': inquiry.paymentMethod,
+        'How Heard': inquiry.howHeard,
+        'Questions': inquiry.questions,
+        'Newsletter': inquiry.newsletter ? 'Yes' : 'No',
+        'Date': formatDate(inquiry.timestamp),
       }))
     );
     const workbook = XLSX.utils.book_new();
@@ -213,9 +244,30 @@ export default function AdminDashboard() {
       return;
     }
     const doc = new jsPDF() as jsPDFWithAutoTable;
+    const tableData = inquiries.map(inquiry => [
+      inquiry.firstName,
+      inquiry.lastName,
+      inquiry.email,
+      inquiry.phone,
+      inquiry.city,
+      inquiry.region,
+      inquiry.course,
+      inquiry.schedule,
+      inquiry.startDate,
+      inquiry.skillLevel,
+      inquiry.goals.join(', '),
+      inquiry.experience || 'N/A',
+      inquiry.paymentMethod,
+      inquiry.howHeard || 'N/A',
+      inquiry.questions || 'N/A',
+      inquiry.newsletter ? 'Yes' : 'No',
+      formatDate(inquiry.timestamp),
+    ]);
     doc.autoTable({
-      head: [['Name', 'Email', 'Date']],
-      body: inquiries.map(inquiry => [inquiry.name, inquiry.email, formatDate(inquiry.timestamp)]),
+      head: [['First Name', 'Last Name', 'Email', 'Phone', 'City', 'Region', 'Course', 'Schedule', 'Start Date', 'Skill', 'Goals', 'Experience', 'Payment', 'Source', 'Questions', 'Newsletter', 'Date']],
+      body: tableData,
+      styles: { fontSize: 5 },
+      headStyles: { fontSize: 6 },
     });
     doc.save('ClassInquiries.pdf');
   };
@@ -414,6 +466,11 @@ export default function AdminDashboard() {
           );
         });
     }
+  };
+
+  const openViewInquiryDialog = (inquiry: ClassInquiry) => {
+    setSelectedInquiry(inquiry);
+    setIsViewInquiryDialogOpen(true);
   };
 
   if (isUserLoading || !user) {
@@ -664,9 +721,7 @@ export default function AdminDashboard() {
                     <TableHead>Date</TableHead>
                     <TableHead>Name</TableHead>
                     <TableHead>Email</TableHead>
-                    <TableHead>
-                      <span className="sr-only">Actions</span>
-                    </TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -676,16 +731,27 @@ export default function AdminDashboard() {
                         <TableCell><Skeleton className="h-4 w-32" /></TableCell>
                         <TableCell><Skeleton className="h-4 w-24" /></TableCell>
                         <TableCell><Skeleton className="h-4 w-40" /></TableCell>
-                        <TableCell><Skeleton className="h-8 w-8" /></TableCell>
+                        <TableCell className="flex gap-2">
+                          <Skeleton className="h-8 w-8" />
+                          <Skeleton className="h-8 w-8" />
+                        </TableCell>
                       </TableRow>
                     ))
                   ) : inquiries?.length ? (
                     inquiries.map(inquiry => (
                       <TableRow key={inquiry.id}>
                         <TableCell className="font-medium whitespace-nowrap">{formatDate(inquiry.timestamp)}</TableCell>
-                        <TableCell>{inquiry.name}</TableCell>
+                        <TableCell>{inquiry.firstName} {inquiry.lastName}</TableCell>
                         <TableCell>{inquiry.email}</TableCell>
-                        <TableCell>
+                        <TableCell className="flex gap-2">
+                           <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => openViewInquiryDialog(inquiry)}
+                          >
+                            <Eye className="h-4 w-4" />
+                            <span className="sr-only">View Inquiry</span>
+                          </Button>
                           <Button
                             variant="ghost"
                             size="icon"
@@ -814,6 +880,78 @@ export default function AdminDashboard() {
             </Button>
             <Button variant="destructive" onClick={handleDeleteInquiry}>
               Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Inquiry Dialog */}
+      <Dialog open={isViewInquiryDialogOpen} onOpenChange={setIsViewInquiryDialogOpen}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Class Inquiry Details</DialogTitle>
+            <DialogDescription>
+              Full details for the inquiry from {selectedInquiry?.firstName} {selectedInquiry?.lastName}.
+            </DialogDescription>
+          </DialogHeader>
+          {selectedInquiry && (
+            <ScrollArea className="max-h-[70vh] pr-6">
+              <div className="space-y-6 text-sm">
+                
+                {/* Personal Info */}
+                <div>
+                  <h4 className="font-semibold text-base mb-2 text-primary">Personal Information</h4>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                    <div><strong>Name:</strong> {selectedInquiry.firstName} {selectedInquiry.lastName}</div>
+                    <div><strong>Email:</strong> {selectedInquiry.email}</div>
+                    <div><strong>Phone:</strong> {selectedInquiry.phone}</div>
+                    <div><strong>City/Town:</strong> {selectedInquiry.city}</div>
+                    <div><strong>Region:</strong> {selectedInquiry.region}</div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Course Selection */}
+                <div>
+                  <h4 className="font-semibold text-base mb-2 text-primary">Course Selection</h4>
+                   <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                    <div><strong>Course:</strong> <span className="capitalize">{selectedInquiry.course.replace('-', ' ')}</span></div>
+                    <div><strong>Schedule:</strong> Weekend Mornings</div>
+                    <div><strong>Start Date:</strong> {selectedInquiry.startDate}</div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Background */}
+                <div>
+                  <h4 className="font-semibold text-base mb-2 text-primary">Background & Experience</h4>
+                  <div className="grid grid-cols-1 gap-y-2">
+                    <div><strong>Skill Level:</strong> <span className="capitalize">{selectedInquiry.skillLevel}</span></div>
+                    <div><strong>Goals:</strong> {selectedInquiry.goals.join(', ')}</div>
+                    {selectedInquiry.experience && <div><strong>Experience:</strong> <p className="text-muted-foreground pl-2">{selectedInquiry.experience}</p></div>}
+                  </div>
+                </div>
+
+                <Separator />
+                
+                {/* Payment & Additional Info */}
+                <div>
+                  <h4 className="font-semibold text-base mb-2 text-primary">Payment & Additional Info</h4>
+                  <div className="grid grid-cols-1 gap-y-2">
+                    <div><strong>Payment Method:</strong> Mobile Money</div>
+                    {selectedInquiry.howHeard && <div><strong>How Heard:</strong> {selectedInquiry.howHeard}</div>}
+                    {selectedInquiry.questions && <div><strong>Questions:</strong> <p className="text-muted-foreground pl-2">{selectedInquiry.questions}</p></div>}
+                    <div><strong>Newsletter:</strong> {selectedInquiry.newsletter ? 'Yes' : 'No'}</div>
+                  </div>
+                </div>
+              </div>
+            </ScrollArea>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsViewInquiryDialogOpen(false)}>
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>
