@@ -1,11 +1,8 @@
 'use server';
 
 import { z } from 'zod';
-import { initializeFirebase } from '@/firebase';
+import { initializeFirebaseAdmin } from '@/firebase/server';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
-
 
 const contactSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters long.' }),
@@ -76,7 +73,7 @@ export async function submitContactForm(
   };
 
   try {
-    const { firestore } = initializeFirebase();
+    const { firestore } = await initializeFirebaseAdmin();
     const messagesCollection = collection(firestore, 'contact_messages');
     
     await addDoc(messagesCollection, dataToSave);
@@ -85,17 +82,8 @@ export async function submitContactForm(
       message: 'Your message has been sent successfully!',
       success: true,
     };
-  } catch (error) {
-     const { firestore } = initializeFirebase();
-     const messagesCollection = collection(firestore, 'contact_messages');
-     errorEmitter.emit(
-        'permission-error',
-        new FirestorePermissionError({
-            path: messagesCollection.path,
-            operation: 'create',
-            requestResourceData: dataToSave,
-        })
-    );
+  } catch (error: any) {
+    console.error("Error submitting contact form:", error);
     return {
       message: 'There was an error sending your message. Please try again.',
       success: false,
@@ -136,7 +124,7 @@ export async function submitClassInquiry(
   }
 
   try {
-    const { firestore } = initializeFirebase();
+    const { firestore } = await initializeFirebaseAdmin();
     const inquiriesCollection = collection(firestore, 'class_inquiries');
     
     const dataToSave = {
@@ -150,21 +138,8 @@ export async function submitClassInquiry(
       message: 'Thank you for your interest! We will be in touch shortly.',
       success: true,
     };
-  } catch (error) {
-     const { firestore } = initializeFirebase();
-     const inquiriesCollection = collection(firestore, 'class_inquiries');
-     const dataToSave = {
-      ...validatedFields.data,
-      timestamp: serverTimestamp(),
-    };
-    errorEmitter.emit(
-        'permission-error',
-        new FirestorePermissionError({
-          path: inquiriesCollection.path,
-          operation: 'create',
-          requestResourceData: dataToSave,
-        })
-      );
+  } catch (error: any) {
+    console.error("Error submitting class inquiry:", error);
     return {
       message: 'There was an error submitting your inquiry. Please try again.',
       success: false,
