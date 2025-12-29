@@ -19,36 +19,26 @@ const services = [
     icon: <Briefcase className="h-10 w-10 text-primary" />,
     title: 'Business & Portfolio Websites',
     description: 'For companies and professionals seeking a standout online presence.',
-    buttonText: 'Request Service',
-    buttonLink: '#contact',
   },
   {
     icon: <ShoppingCart className="h-10 w-10 text-primary" />,
     title: 'E-Commerce Stores',
     description: 'Using WordPress WooCommerce or powerful custom-built solutions.',
-    buttonText: 'Request Service',
-    buttonLink: '#contact',
   },
   {
     icon: <AppWindow className="h-10 w-10 text-primary" />,
     title: 'Web Applications & SaaS',
     description: 'Interactive, database-driven tools to power your business.',
-    buttonText: 'Request Service',
-    buttonLink: '#contact',
   },
   {
     icon: <Newspaper className="h-10 w-10 text-primary" />,
     title: 'Blogs & Content Platforms',
     description: 'Leveraging WordPress or modern Headless CMS architecture.',
-    buttonText: 'Request Service',
-    buttonLink: '#contact',
   },
   {
     icon: <Wrench className="h-10 w-10 text-primary" />,
     title: 'Website Maintenance & Updates',
     description: 'Reliable, ongoing support plans to keep your site running smoothly.',
-    buttonText: 'Request Service',
-    buttonLink: '#contact',
   },
   {
     icon: <GraduationCap className="h-10 w-10 text-primary" />,
@@ -61,8 +51,6 @@ const services = [
     icon: <BarChart className="h-10 w-10 text-primary" />,
     title: 'Data Analysis',
     description: 'Interpreting data to help you make better business decisions.',
-    buttonText: 'Request Service',
-    buttonLink: '#contact',
   },
 ];
 
@@ -89,11 +77,13 @@ export function Services() {
                   <CardTitle className="text-xl">{service.title}</CardTitle>
                   <p className="mt-2 text-muted-foreground">{service.description}</p>
                 </CardContent>
-                <CardFooter className="justify-center">
-                  <Button asChild variant="outline">
-                    <Link href={service.buttonLink}>{service.buttonText}</Link>
-                  </Button>
-                </CardFooter>
+                {(service.buttonText && service.buttonLink) && (
+                  <CardFooter className="justify-center">
+                    <Button asChild variant="outline">
+                      <Link href={service.buttonLink}>{service.buttonText}</Link>
+                    </Button>
+                  </CardFooter>
+                )}
               </Card>
             </AnimateOnScroll>
           ))}
