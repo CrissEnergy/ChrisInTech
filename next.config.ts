@@ -10,7 +10,7 @@ const nextConfig: NextConfig = {
   },
   images: {
     remotePatterns: [
-      {
+       {
         protocol: 'https',
         hostname: 'scontent.facc1-1.fna.fbcdn.net',
         port: '',
@@ -101,7 +101,8 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       },
       {
-        protocol: 'https',
+        protocol: 'https'
+        ,
         hostname: 'cdn.iconscout.com',
         port: '',
         pathname: '/**',

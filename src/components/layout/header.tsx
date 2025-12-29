@@ -28,8 +28,8 @@ export function Header() {
   return (
     <header className="sticky top-4 z-50 mx-auto w-[calc(100%-2rem)] max-w-7xl rounded-2xl border border-white/10 bg-slate-900/50 backdrop-blur-xl transition-all duration-300">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <Link href="#home" className="flex items-center gap-2 text-xl font-bold text-primary">
-          {logo && <Image src={logo.imageUrl} alt={logo.description} width={150} height={40} />}
+        <Link href="#home" className="flex items-center gap-2 text-xl font-bold">
+          {logo && <Image src={logo.imageUrl} alt={logo.description} width={150} height={40} className="mix-blend-screen object-contain" />}
         </Link>
         <nav className="hidden items-center md:flex">
           <ul className="flex items-center space-x-6">
@@ -79,7 +79,7 @@ export function Header() {
                <SheetHeader className="flex-row items-center justify-between border-b pb-4">
                   <SheetTitle>
                     <Link href="#home" className="text-xl font-bold text-primary" onClick={() => setIsMobileMenuOpen(false)}>
-                      {logo && <Image src={logo.imageUrl} alt={logo.description} width={150} height={40} />}
+                      {logo && <Image src={logo.imageUrl} alt={logo.description} width={150} height={40} className="mix-blend-screen object-contain" />}
                     </Link>
                   </SheetTitle>
                   <SheetClose asChild>
