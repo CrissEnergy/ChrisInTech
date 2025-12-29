@@ -286,18 +286,12 @@ export default function AdminDashboard() {
         });
       })
       .catch((error) => {
-        console.error("Error saving profile image URL:", error);
         const permissionError = new FirestorePermissionError({
           path: profileDocRef.path,
           operation: 'update',
           requestResourceData: { aboutImageUrl: profileImageUrl },
         });
         errorEmitter.emit('permission-error', permissionError);
-        toast({
-          title: 'Save Error',
-          description: error.message || 'Could not save the profile image URL.',
-          variant: 'destructive'
-        });
       })
       .finally(() => {
         setIsSavingProfile(false);
@@ -325,58 +319,56 @@ export default function AdminDashboard() {
     const liveLink = formData.get('liveLink') as string;
     const imageUrl = `https://s.wordpress.com/mshots/v1/${encodeURIComponent(liveLink)}?w=400&h=300`;
 
-    try {
-        const projectData = {
-          title: formData.get('title') as string,
-          description: formData.get('description') as string,
-          technologies: selectedTechnologies,
-          liveLink: liveLink,
-          imageUrl: imageUrl,
-        };
+    const projectData = {
+      title: formData.get('title') as string,
+      description: formData.get('description') as string,
+      technologies: selectedTechnologies,
+      liveLink: liveLink,
+      imageUrl: imageUrl,
+    };
 
-        if (currentProject) {
-          // Update project
-          const projectRef = doc(firestore, 'projects', currentProject.id);
-          updateDoc(projectRef, projectData)
-            .then(() => {
-              toast({ title: 'Project Updated', description: `${projectData.title} has been successfully updated.` });
+    if (currentProject) {
+      const projectRef = doc(firestore, 'projects', currentProject.id);
+      updateDoc(projectRef, projectData)
+        .then(() => {
+          toast({ title: 'Project Updated', description: `${projectData.title} has been successfully updated.` });
+        })
+        .catch(error => {
+          errorEmitter.emit(
+            'permission-error',
+            new FirestorePermissionError({
+              path: projectRef.path,
+              operation: 'update',
+              requestResourceData: projectData,
             })
-            .catch(error => {
-              errorEmitter.emit(
-                'permission-error',
-                new FirestorePermissionError({
-                  path: projectRef.path,
-                  operation: 'update',
-                  requestResourceData: projectData,
-                })
-              )
-            });
-        } else {
-          // Add new project
-          const projectsColRef = collection(firestore, 'projects');
-          addDoc(projectsColRef, projectData)
-            .then(() => {
-              toast({ title: 'Project Added', description: `${projectData.title} has been successfully added.` });
+          );
+        })
+        .finally(() => {
+          setIsDialogOpen(false);
+          setCurrentProject(null);
+          setIsSubmitting(false);
+        });
+    } else {
+      const projectsColRef = collection(firestore, 'projects');
+      addDoc(projectsColRef, projectData)
+        .then(() => {
+          toast({ title: 'Project Added', description: `${projectData.title} has been successfully added.` });
+        })
+        .catch(error => {
+          errorEmitter.emit(
+            'permission-error',
+            new FirestorePermissionError({
+              path: projectsColRef.path,
+              operation: 'create',
+              requestResourceData: projectData,
             })
-            .catch(error => {
-              errorEmitter.emit(
-                'permission-error',
-                new FirestorePermissionError({
-                  path: projectsColRef.path,
-                  operation: 'create',
-                  requestResourceData: projectData,
-                })
-              )
-            });
-        }
-
-        setIsDialogOpen(false);
-        setCurrentProject(null);
-    } catch (error) {
-        console.error("Error submitting form:", error);
-        toast({ title: 'Submission Error', description: 'Could not save the project. Please try again.', variant: 'destructive'});
-    } finally {
-        setIsSubmitting(false);
+          );
+        })
+        .finally(() => {
+          setIsDialogOpen(false);
+          setCurrentProject(null);
+          setIsSubmitting(false);
+        });
     }
   };
 
@@ -401,8 +393,6 @@ export default function AdminDashboard() {
       deleteDoc(projectRef)
         .then(() => {
           toast({ title: 'Project Deleted', description: `${projectToDelete.title} has been removed.`, variant: 'destructive' });
-          setIsDeleteDialogOpen(false);
-          setProjectToDelete(null);
         })
         .catch(error => {
             errorEmitter.emit(
@@ -412,6 +402,10 @@ export default function AdminDashboard() {
                   operation: 'delete',
                 })
             );
+        })
+        .finally(() => {
+            setIsDeleteDialogOpen(false);
+            setProjectToDelete(null);
         });
     }
   };
@@ -427,8 +421,6 @@ export default function AdminDashboard() {
       deleteDoc(messageRef)
         .then(() => {
           toast({ title: 'Message Deleted', description: 'The message has been removed.', variant: 'destructive' });
-          setIsDeleteMessageDialogOpen(false);
-          setMessageToDelete(null);
         })
         .catch(error => {
           errorEmitter.emit(
@@ -438,6 +430,10 @@ export default function AdminDashboard() {
               operation: 'delete',
             })
           );
+        })
+        .finally(() => {
+          setIsDeleteMessageDialogOpen(false);
+          setMessageToDelete(null);
         });
     }
   };
@@ -453,8 +449,6 @@ export default function AdminDashboard() {
       deleteDoc(inquiryRef)
         .then(() => {
           toast({ title: 'Inquiry Deleted', description: 'The inquiry has been removed.', variant: 'destructive' });
-          setIsDeleteInquiryDialogOpen(false);
-          setInquiryToDelete(null);
         })
         .catch(error => {
           errorEmitter.emit(
@@ -464,6 +458,10 @@ export default function AdminDashboard() {
               operation: 'delete',
             })
           );
+        })
+        .finally(() => {
+           setIsDeleteInquiryDialogOpen(false);
+           setInquiryToDelete(null);
         });
     }
   };

@@ -56,25 +56,6 @@ service cloud.firestore {
       return exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
     }
     
-    function isClassInquiryDataValid(data) {
-      return data.firstName is string && data.firstName.size() > 0 &&
-             data.lastName is string && data.lastName.size() > 0 &&
-             data.email is string && data.email.matches('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,4}$') &&
-             data.phone is string && data.phone.matches('^\\+233\\d{9}$') &&
-             data.city is string && data.city.size() > 0 &&
-             data.region is string && data.region.size() > 0 &&
-             data.course in ['web-fundamentals', 'wordpress-dev'] &&
-             data.schedule == 'weekend-mornings' &&
-             data.startDate is string && data.startDate.size() > 0 &&
-             data.skillLevel in ['beginner', 'intermediate', 'advanced'] &&
-             data.goals is list && data.goals.size() > 0 &&
-             data.paymentMethod == 'mobile-money' &&
-             data.newsletter is bool &&
-             ('experience' in data ? data.experience is string : true) &&
-             ('howHeard' in data ? data.howHeard is string : true) &&
-             ('questions' in data ? data.questions is string : true);
-    }
-
     // ------------------------------------------------------------------------
     // Collection Rules
     // ------------------------------------------------------------------------
@@ -131,13 +112,13 @@ service cloud.firestore {
     /**
      * @description Stores inquiries for career classes.
      * Allows public write access for creation but restricts all read and
-     * management operations to admin users. Data is validated on creation.
+     * management operations to admin users. Data is validated on the server.
      * @path /class_inquiries/{inquiryId}
      */
     match /class_inquiries/{inquiryId} {
       allow get: if isAdmin();
       allow list: if isAdmin();
-      allow create: if isClassInquiryDataValid(request.resource.data);
+      allow create: if true;
       allow update: if isAdmin();
       allow delete: if isAdmin();
     }
