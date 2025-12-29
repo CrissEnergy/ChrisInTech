@@ -142,6 +142,12 @@ const nextConfig: NextConfig = {
         hostname: 'www.uc3m.es',
         port: '',
         pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'odukoboatemaaeducationalcomplex.com',
+        port: '',
+        pathname: '/**',
       }
     ],
   },
