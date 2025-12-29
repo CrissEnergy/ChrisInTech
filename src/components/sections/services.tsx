@@ -41,13 +41,6 @@ const services = [
     description: 'Reliable, ongoing support plans to keep your site running smoothly.',
   },
   {
-    icon: <GraduationCap className="h-10 w-10 text-primary" />,
-    title: 'Career Online Classes',
-    description: 'In-depth web development training and personalized mentoring.',
-    buttonText: 'Join Classes',
-    buttonLink: '#contact',
-  },
-  {
     icon: <BarChart className="h-10 w-10 text-primary" />,
     title: 'Data Analysis',
     description: 'Interpreting data to help you make better business decisions.',
@@ -66,7 +59,7 @@ export function Services() {
             Providing a wide range of web development and design solutions.
           </p>
         </div>
-        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
           {services.map((service, index) => (
             <AnimateOnScroll key={service.title} delay={index * 100}>
               <Card className="flex h-full flex-col">
@@ -77,13 +70,6 @@ export function Services() {
                   <CardTitle className="text-xl">{service.title}</CardTitle>
                   <p className="mt-2 text-muted-foreground">{service.description}</p>
                 </CardContent>
-                {(service.buttonText && service.buttonLink) && (
-                  <CardFooter className="justify-center">
-                    <Button asChild variant="outline">
-                      <Link href={service.buttonLink}>{service.buttonText}</Link>
-                    </Button>
-                  </CardFooter>
-                )}
               </Card>
             </AnimateOnScroll>
           ))}
