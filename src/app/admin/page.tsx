@@ -807,7 +807,7 @@ export default function AdminDashboard() {
             <DialogDescription>
               Are you sure you want to permanently delete this inquiry? This action cannot be undone.
             </DialogDescription>
-          </Header>
+          </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDeleteInquiryDialogOpen(false)}>
               Cancel
