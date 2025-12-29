@@ -628,6 +628,7 @@ export default function AdminDashboard() {
                   <Table>
                     <TableHeader>
                       <TableRow>
+                        <TableHead>#</TableHead>
                         <TableHead>
                           <Button variant="ghost" onClick={() => handleSort('date')}>
                             Date
@@ -653,6 +654,7 @@ export default function AdminDashboard() {
                       {isLoadingMessages ? (
                         Array.from({ length: 5 }).map((_, i) => (
                           <TableRow key={i}>
+                            <TableCell><Skeleton className="h-4 w-4" /></TableCell>
                             <TableCell><Skeleton className="h-4 w-32" /></TableCell>
                             <TableCell><Skeleton className="h-4 w-24" /></TableCell>
                             <TableCell><Skeleton className="h-4 w-40" /></TableCell>
@@ -663,8 +665,9 @@ export default function AdminDashboard() {
                           </TableRow>
                         ))
                       ) : sortedMessages.length ? (
-                        sortedMessages.map(message => (
+                        sortedMessages.map((message, index) => (
                           <TableRow key={message.id}>
+                            <TableCell>{index + 1}</TableCell>
                             <TableCell className="font-medium whitespace-nowrap">{formatDate(message.timestamp)}</TableCell>
                             <TableCell>{message.name}</TableCell>
                             <TableCell>{message.email}</TableCell>
@@ -690,7 +693,7 @@ export default function AdminDashboard() {
                         ))
                       ) : (
                         <TableRow>
-                          <TableCell colSpan={4} className="text-center">
+                          <TableCell colSpan={5} className="text-center">
                             No messages received yet.
                           </TableCell>
                         </TableRow>
