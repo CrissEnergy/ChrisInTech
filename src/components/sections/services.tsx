@@ -7,6 +7,7 @@ import {
   Newspaper,
   Wrench,
   GraduationCap,
+  BarChart,
 } from 'lucide-react';
 import Link from 'next/link';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -56,6 +57,13 @@ const services = [
     buttonText: 'Join Classes',
     buttonLink: '#contact',
   },
+  {
+    icon: <BarChart className="h-10 w-10 text-primary" />,
+    title: 'Data Analysis',
+    description: 'Interpreting data to help you make better business decisions.',
+    buttonText: 'Request Service',
+    buttonLink: '#contact',
+  },
 ];
 
 export function Services() {
@@ -70,7 +78,7 @@ export function Services() {
             Providing a wide range of web development and design solutions.
           </p>
         </div>
-        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {services.map((service, index) => (
             <AnimateOnScroll key={service.title} delay={index * 100}>
               <Card className="flex h-full flex-col">
