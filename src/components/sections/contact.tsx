@@ -74,8 +74,8 @@ export function Contact() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="phone">Phone Number (Optional)</Label>
-              <Input id="phone" name="phone" type="tel" placeholder="Your phone number" />
+              <Label htmlFor="phone">Phone Number</Label>
+              <Input id="phone" name="phone" type="tel" placeholder="Your phone number" required />
                {state.errors?.phone && (
                   <p className="text-sm text-destructive">{state.errors.phone.join(', ')}</p>
                 )}
@@ -106,5 +106,3 @@ export function Contact() {
     </section>
   );
 }
-
-    
