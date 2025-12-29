@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { MoreHorizontal, PlusCircle, Trash2, Download, Eye, ArrowUpDown } from 'lucide-react';
@@ -125,7 +125,7 @@ type ClassInquiry = {
   } | null;
 };
 
-type SortKey = keyof ContactMessage | 'date' | 'name' | 'email';
+type SortKey = keyof Omit<ContactMessage, 'id' | 'message' | 'phone' | 'timestamp'> | 'date';
 type SortDirection = 'asc' | 'desc';
 
 
@@ -363,48 +363,30 @@ export default function AdminDashboard() {
       imageUrl: imageUrl,
     };
 
-    if (currentProject) {
-      const projectRef = doc(firestore, 'projects', currentProject.id);
-      updateDoc(projectRef, projectData)
-        .then(() => {
-          toast({ title: 'Project Updated', description: `${projectData.title} has been successfully updated.` });
+    try {
+      if (currentProject) {
+        const projectRef = doc(firestore, 'projects', currentProject.id);
+        await updateDoc(projectRef, projectData);
+        toast({ title: 'Project Updated', description: `${projectData.title} has been successfully updated.` });
+      } else {
+        const projectsColRef = collection(firestore, 'projects');
+        await addDoc(projectsColRef, projectData);
+        toast({ title: 'Project Added', description: `${projectData.title} has been successfully added.` });
+      }
+    } catch(error) {
+       const ref = currentProject ? doc(firestore, 'projects', currentProject.id) : collection(firestore, 'projects');
+       errorEmitter.emit(
+        'permission-error',
+        new FirestorePermissionError({
+          path: ref.path,
+          operation: currentProject ? 'update' : 'create',
+          requestResourceData: projectData,
         })
-        .catch(error => {
-          errorEmitter.emit(
-            'permission-error',
-            new FirestorePermissionError({
-              path: projectRef.path,
-              operation: 'update',
-              requestResourceData: projectData,
-            })
-          );
-        })
-        .finally(() => {
-          setIsDialogOpen(false);
-          setCurrentProject(null);
-          setIsSubmitting(false);
-        });
-    } else {
-      const projectsColRef = collection(firestore, 'projects');
-      addDoc(projectsColRef, projectData)
-        .then(() => {
-          toast({ title: 'Project Added', description: `${projectData.title} has been successfully added.` });
-        })
-        .catch(error => {
-          errorEmitter.emit(
-            'permission-error',
-            new FirestorePermissionError({
-              path: projectsColRef.path,
-              operation: 'create',
-              requestResourceData: projectData,
-            })
-          );
-        })
-        .finally(() => {
-          setIsDialogOpen(false);
-          setCurrentProject(null);
-          setIsSubmitting(false);
-        });
+      );
+    } finally {
+      setIsDialogOpen(false);
+      setCurrentProject(null);
+      setIsSubmitting(false);
     }
   };
 
@@ -427,9 +409,6 @@ export default function AdminDashboard() {
     if (projectToDelete && firestore) {
       const projectRef = doc(firestore, 'projects', projectToDelete.id);
       deleteDoc(projectRef)
-        .then(() => {
-          toast({ title: 'Project Deleted', description: `${projectToDelete.title} has been removed.`, variant: 'destructive' });
-        })
         .catch(error => {
             errorEmitter.emit(
                 'permission-error',
@@ -460,9 +439,6 @@ export default function AdminDashboard() {
     if (messageToDelete && firestore) {
       const messageRef = doc(firestore, 'contact_messages', messageToDelete.id);
       deleteDoc(messageRef)
-        .then(() => {
-          toast({ title: 'Message Deleted', description: 'The message has been removed.', variant: 'destructive' });
-        })
         .catch(error => {
           errorEmitter.emit(
             'permission-error',
@@ -488,9 +464,6 @@ export default function AdminDashboard() {
     if (inquiryToDelete && firestore) {
       const inquiryRef = doc(firestore, 'class_inquiries', inquiryToDelete.id);
       deleteDoc(inquiryRef)
-        .then(() => {
-          toast({ title: 'Inquiry Deleted', description: 'The inquiry has been removed.', variant: 'destructive' });
-        })
         .catch(error => {
           errorEmitter.emit(
             'permission-error',
@@ -522,64 +495,43 @@ export default function AdminDashboard() {
 
   return (
     <>
-      <div className="flex items-center">
-        <div className="ml-auto flex items-center gap-2">
-          <Button onClick={handleLogout} variant="outline">Logout</Button>
-          <Button size="sm" className="h-8 gap-1" onClick={openAddDialog}>
-            <PlusCircle className="h-3.5 w-3.5" />
-            <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-              Add Project
-            </span>
-          </Button>
+      <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
+        <div className="relative ml-auto flex-1 md:grow-0">
+         {user && (
+            <Button onClick={handleLogout} variant="outline" size="sm">Logout</Button>
+          )}
         </div>
-      </div>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7 mt-4">
-        <Card className="lg:col-span-2">
-            <CardHeader>
-                <CardTitle>Profile Settings</CardTitle>
-                <CardDescription>Update your public profile picture.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="profile-image-url">Profile Image URL</Label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    id="profile-image-url"
-                    value={profileImageUrl}
-                    onChange={(e) => setProfileImageUrl(e.target.value)}
-                    placeholder="https://example.com/image.jpg"
-                    disabled={isSavingProfile}
-                  />
-                  <Button onClick={handleProfileImageSave} disabled={isSavingProfile}>
-                    {isSavingProfile ? 'Saving...' : 'Save'}
-                  </Button>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label>Current Image</Label>
-                 <div
-                  className="relative flex items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/50 p-4 text-center"
-                >
-                  {isLoadingProfile ? (
-                      <Skeleton className="h-40 w-40 rounded-full" />
-                  ) : profileImageUrl ? (
-                    <Image
-                      src={profileImageUrl}
-                      alt="Profile preview"
-                      width={160}
-                      height={160}
-                      className="h-40 w-40 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex flex-col items-center gap-2 text-muted-foreground h-40 w-40 justify-center">
-                      <span>No Image URL</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-        </Card>
-        <Card className="lg:col-span-5">
+      </header>
+       <div className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
+        <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-4">
+          <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
+            <Card className="sm:col-span-2">
+              <CardHeader className="pb-3">
+                <CardTitle>Welcome, Admin!</CardTitle>
+                <CardDescription className="max-w-lg text-balance leading-relaxed">
+                  This is your dashboard to manage your portfolio content. You can add new projects, view messages, and manage class inquiries.
+                </CardDescription>
+              </CardHeader>
+              <CardFooter>
+                 <Button onClick={openAddDialog}>
+                  <PlusCircle className="h-4 w-4 mr-2" /> Add Project
+                </Button>
+              </CardFooter>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle>Projects</CardTitle>
+                <CardDescription>You have {projects?.length || 0} projects on your portfolio.</CardDescription>
+              </CardHeader>
+            </Card>
+            <Card>
+               <CardHeader className="pb-2">
+                <CardTitle>Messages</CardTitle>
+                <CardDescription>You have {messages?.length || 0} unread messages.</CardDescription>
+              </CardHeader>
+            </Card>
+          </div>
+          <Card>
             <CardHeader>
                 <CardTitle>Projects</CardTitle>
                 <CardDescription>
@@ -662,176 +614,222 @@ export default function AdminDashboard() {
                     </TableBody>
                 </Table>
             </CardContent>
-        </Card>
-      </div>
-
-       <div className="grid gap-4 md:grid-cols-2 mt-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>Contact Messages</CardTitle>
-            <CardDescription>
-              View messages submitted through your contact form.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ScrollArea className="h-96">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>
-                      <Button variant="ghost" onClick={() => handleSort('date')}>
-                        Date
-                        <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Card>
+           <div className="grid gap-4 md:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Contact Messages</CardTitle>
+                <CardDescription>
+                  View messages submitted through your contact form.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ScrollArea className="h-96">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>
+                          <Button variant="ghost" onClick={() => handleSort('date')}>
+                            Date
+                            <ArrowUpDown className="ml-2 h-4 w-4" />
+                          </Button>
+                        </TableHead>
+                        <TableHead>
+                          <Button variant="ghost" onClick={() => handleSort('name')}>
+                            Name
+                            <ArrowUpDown className="ml-2 h-4 w-4" />
+                          </Button>
+                        </TableHead>
+                        <TableHead>
+                           <Button variant="ghost" onClick={() => handleSort('email')}>
+                            Email
+                            <ArrowUpDown className="ml-2 h-4 w-4" />
+                          </Button>
+                        </TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {isLoadingMessages ? (
+                        Array.from({ length: 5 }).map((_, i) => (
+                          <TableRow key={i}>
+                            <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                            <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                            <TableCell><Skeleton className="h-4 w-40" /></TableCell>
+                            <TableCell className="flex gap-2">
+                              <Skeleton className="h-8 w-8" />
+                              <Skeleton className="h-8 w-8" />
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      ) : sortedMessages.length ? (
+                        sortedMessages.map(message => (
+                          <TableRow key={message.id}>
+                            <TableCell className="font-medium whitespace-nowrap">{formatDate(message.timestamp)}</TableCell>
+                            <TableCell>{message.name}</TableCell>
+                            <TableCell>{message.email}</TableCell>
+                            <TableCell className="flex gap-2">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => openViewMessageDialog(message)}
+                              >
+                                <Eye className="h-4 w-4" />
+                                <span className="sr-only">View Message</span>
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => openDeleteMessageDialog(message)}
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                                <span className="sr-only">Delete message</span>
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={4} className="text-center">
+                            No messages received yet.
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </ScrollArea>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div className="space-y-1">
+                  <CardTitle>Class Inquiries</CardTitle>
+                  <CardDescription>
+                    View inquiries for your web development classes.
+                  </CardDescription>
+                </div>
+                <div className="flex gap-2">
+                    <Button size="sm" variant="outline" onClick={handleExportExcel}>
+                        <Download className="h-4 w-4 mr-2" />
+                        Excel
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={handleExportPdf}>
+                        <Download className="h-4 w-4 mr-2" />
+                        PDF
+                    </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <ScrollArea className="h-96">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {isLoadingInquiries ? (
+                        Array.from({ length: 5 }).map((_, i) => (
+                          <TableRow key={i}>
+                            <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                            <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                            <TableCell><Skeleton className="h-4 w-40" /></TableCell>
+                            <TableCell className="flex gap-2">
+                              <Skeleton className="h-8 w-8" />
+                              <Skeleton className="h-8 w-8" />
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      ) : inquiries?.length ? (
+                        inquiries.map(inquiry => (
+                          <TableRow key={inquiry.id}>
+                            <TableCell className="font-medium whitespace-nowrap">{formatDate(inquiry.timestamp)}</TableCell>
+                            <TableCell>{inquiry.firstName} {inquiry.lastName}</TableCell>
+                            <TableCell>{inquiry.email}</TableCell>
+                            <TableCell className="flex gap-2">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => openViewInquiryDialog(inquiry)}
+                              >
+                                <Eye className="h-4 w-4" />
+                                <span className="sr-only">View Inquiry</span>
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => openDeleteInquiryDialog(inquiry)}
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                                <span className="sr-only">Delete inquiry</span>
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={4} className="text-center">
+                            No class inquiries received yet.
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </ScrollArea>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+        <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-1">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Profile Settings</CardTitle>
+                    <CardDescription>Update your public profile picture.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="profile-image-url">Profile Image URL</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        id="profile-image-url"
+                        value={profileImageUrl}
+                        onChange={(e) => setProfileImageUrl(e.target.value)}
+                        placeholder="https://example.com/image.jpg"
+                        disabled={isSavingProfile}
+                      />
+                      <Button onClick={handleProfileImageSave} disabled={isSavingProfile}>
+                        {isSavingProfile ? 'Saving...' : 'Save'}
                       </Button>
-                    </TableHead>
-                    <TableHead>
-                      <Button variant="ghost" onClick={() => handleSort('name')}>
-                        Name
-                        <ArrowUpDown className="ml-2 h-4 w-4" />
-                      </Button>
-                    </TableHead>
-                    <TableHead>
-                      <Button variant="ghost" onClick={() => handleSort('email')}>
-                        Email
-                        <ArrowUpDown className="ml-2 h-4 w-4" />
-                      </Button>
-                    </TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {isLoadingMessages ? (
-                    Array.from({ length: 5 }).map((_, i) => (
-                      <TableRow key={i}>
-                        <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                        <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                        <TableCell><Skeleton className="h-4 w-40" /></TableCell>
-                        <TableCell className="flex gap-2">
-                          <Skeleton className="h-8 w-8" />
-                          <Skeleton className="h-8 w-8" />
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  ) : sortedMessages.length ? (
-                    sortedMessages.map(message => (
-                      <TableRow key={message.id}>
-                        <TableCell className="font-medium whitespace-nowrap">{formatDate(message.timestamp)}</TableCell>
-                        <TableCell>{message.name}</TableCell>
-                        <TableCell>{message.email}</TableCell>
-                        <TableCell className="flex gap-2">
-                           <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => openViewMessageDialog(message)}
-                          >
-                            <Eye className="h-4 w-4" />
-                            <span className="sr-only">View Message</span>
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => openDeleteMessageDialog(message)}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                            <span className="sr-only">Delete message</span>
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={4} className="text-center">
-                        No messages received yet.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </ScrollArea>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div className="space-y-1">
-              <CardTitle>Class Inquiries</CardTitle>
-              <CardDescription>
-                View inquiries for your web development classes.
-              </CardDescription>
-            </div>
-             <div className="flex gap-2">
-                <Button size="sm" variant="outline" onClick={handleExportExcel}>
-                    <Download className="h-4 w-4 mr-2" />
-                    Excel
-                </Button>
-                <Button size="sm" variant="outline" onClick={handleExportPdf}>
-                    <Download className="h-4 w-4 mr-2" />
-                    PDF
-                </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <ScrollArea className="h-96">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {isLoadingInquiries ? (
-                    Array.from({ length: 5 }).map((_, i) => (
-                      <TableRow key={i}>
-                        <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                        <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                        <TableCell><Skeleton className="h-4 w-40" /></TableCell>
-                        <TableCell className="flex gap-2">
-                          <Skeleton className="h-8 w-8" />
-                          <Skeleton className="h-8 w-8" />
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  ) : inquiries?.length ? (
-                    inquiries.map(inquiry => (
-                      <TableRow key={inquiry.id}>
-                        <TableCell className="font-medium whitespace-nowrap">{formatDate(inquiry.timestamp)}</TableCell>
-                        <TableCell>{inquiry.firstName} {inquiry.lastName}</TableCell>
-                        <TableCell>{inquiry.email}</TableCell>
-                        <TableCell className="flex gap-2">
-                           <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => openViewInquiryDialog(inquiry)}
-                          >
-                            <Eye className="h-4 w-4" />
-                            <span className="sr-only">View Inquiry</span>
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => openDeleteInquiryDialog(inquiry)}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                            <span className="sr-only">Delete inquiry</span>
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={4} className="text-center">
-                        No class inquiries received yet.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </ScrollArea>
-          </CardContent>
-        </Card>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Current Image</Label>
+                    <div
+                      className="relative flex items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/50 p-4 text-center"
+                    >
+                      {isLoadingProfile ? (
+                          <Skeleton className="h-40 w-40 rounded-full" />
+                      ) : profileImageUrl ? (
+                        <Image
+                          src={profileImageUrl}
+                          alt="Profile preview"
+                          width={160}
+                          height={160}
+                          className="h-40 w-40 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex flex-col items-center gap-2 text-muted-foreground h-40 w-40 justify-center">
+                          <span>No Image URL</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+            </Card>
+        </div>
       </div>
 
 

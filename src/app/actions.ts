@@ -69,36 +69,33 @@ export async function submitContactForm(
       success: false,
     };
   }
+  
+  const dataToSave = {
+    ...validatedFields.data,
+    timestamp: serverTimestamp(),
+  };
 
   try {
     const { firestore } = initializeFirebase();
     const messagesCollection = collection(firestore, 'contact_messages');
     
-    const dataToSave = {
-      ...validatedFields.data,
-      timestamp: serverTimestamp(),
-    };
-
-    await addDoc(messagesCollection, dataToSave)
-      .catch((error) => {
-        errorEmitter.emit(
-          'permission-error',
-          new FirestorePermissionError({
-            path: messagesCollection.path,
-            operation: 'create',
-            requestResourceData: dataToSave,
-          })
-        );
-        // This throw is important to trigger the catch block below
-        throw error;
-      });
+    await addDoc(messagesCollection, dataToSave);
 
     return {
       message: 'Your message has been sent successfully!',
       success: true,
     };
   } catch (error) {
-    console.error('Error saving message to Firestore:', error);
+     const { firestore } = initializeFirebase();
+     const messagesCollection = collection(firestore, 'contact_messages');
+     errorEmitter.emit(
+        'permission-error',
+        new FirestorePermissionError({
+            path: messagesCollection.path,
+            operation: 'create',
+            requestResourceData: dataToSave,
+        })
+    );
     return {
       message: 'There was an error sending your message. Please try again.',
       success: false,
@@ -147,9 +144,20 @@ export async function submitClassInquiry(
       timestamp: serverTimestamp(),
     };
 
-    await addDoc(inquiriesCollection, dataToSave)
-    .catch((error) => {
-      errorEmitter.emit(
+    await addDoc(inquiriesCollection, dataToSave);
+
+    return {
+      message: 'Thank you for your interest! We will be in touch shortly.',
+      success: true,
+    };
+  } catch (error) {
+     const { firestore } = initializeFirebase();
+     const inquiriesCollection = collection(firestore, 'class_inquiries');
+     const dataToSave = {
+      ...validatedFields.data,
+      timestamp: serverTimestamp(),
+    };
+    errorEmitter.emit(
         'permission-error',
         new FirestorePermissionError({
           path: inquiriesCollection.path,
@@ -157,15 +165,6 @@ export async function submitClassInquiry(
           requestResourceData: dataToSave,
         })
       );
-      throw error;
-    });
-
-    return {
-      message: 'Thank you for your interest! We will be in touch shortly.',
-      success: true,
-    };
-  } catch (error) {
-    console.error('Error saving class inquiry to Firestore:', error);
     return {
       message: 'There was an error submitting your inquiry. Please try again.',
       success: false,
