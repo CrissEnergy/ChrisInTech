@@ -209,6 +209,11 @@
           "type": "string",
           "description": "URL to the profile image for the About Me section.",
           "format": "uri"
+        },
+        "logoImageUrl": {
+            "type": "string",
+            "description": "URL to the site logo image.",
+            "format": "uri"
         }
       },
       "required": [

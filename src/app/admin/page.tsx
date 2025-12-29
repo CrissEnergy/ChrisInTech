@@ -87,6 +87,7 @@ const technologyOptions: Option[] = [
 
 type SiteProfile = {
   aboutImageUrl: string;
+  logoImageUrl: string;
 };
 
 type ContactMessage = {
@@ -161,6 +162,8 @@ export default function AdminDashboard() {
   
   const [profileImageUrl, setProfileImageUrl] = useState('');
   const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [logoImageUrl, setLogoImageUrl] = useState('');
+  const [isSavingLogo, setIsSavingLogo] = useState(false);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -198,8 +201,9 @@ export default function AdminDashboard() {
   }, [currentProject, isDialogOpen]);
 
   useEffect(() => {
-    if (profileSettings?.aboutImageUrl) {
-      setProfileImageUrl(profileSettings.aboutImageUrl);
+    if (profileSettings) {
+      setProfileImageUrl(profileSettings.aboutImageUrl || '');
+      setLogoImageUrl(profileSettings.logoImageUrl || '');
     }
   }, [profileSettings]);
   
@@ -331,6 +335,32 @@ export default function AdminDashboard() {
       })
       .finally(() => {
         setIsSavingProfile(false);
+      });
+  };
+
+  const handleLogoImageSave = async () => {
+    if (!logoImageUrl || !firestore) return;
+
+    setIsSavingLogo(true);
+    const profileDocRef = doc(firestore, 'settings', 'profile');
+    
+    setDoc(profileDocRef, { logoImageUrl: logoImageUrl }, { merge: true })
+      .then(() => {
+        toast({
+          title: 'Site Logo Updated',
+          description: 'Your new site logo URL has been saved.',
+        });
+      })
+      .catch((error) => {
+        const permissionError = new FirestorePermissionError({
+          path: profileDocRef.path,
+          operation: 'update',
+          requestResourceData: { logoImageUrl: logoImageUrl },
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      })
+      .finally(() => {
+        setIsSavingLogo(false);
       });
   };
 
@@ -831,6 +861,49 @@ export default function AdminDashboard() {
                     </div>
                   </div>
                 </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                  <CardTitle>Site Logo</CardTitle>
+                  <CardDescription>Update your site logo.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="logo-image-url">Logo Image URL</Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="logo-image-url"
+                      value={logoImageUrl}
+                      onChange={(e) => setLogoImageUrl(e.target.value)}
+                      placeholder="https://example.com/logo.png"
+                      disabled={isSavingLogo}
+                    />
+                    <Button onClick={handleLogoImageSave} disabled={isSavingLogo}>
+                      {isSavingLogo ? 'Saving...' : 'Save'}
+                    </Button>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Current Logo</Label>
+                  <div className="relative flex items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/50 p-4 text-center bg-slate-900/50">
+                    {isLoadingProfile ? (
+                        <Skeleton className="h-20 w-40" />
+                    ) : logoImageUrl ? (
+                      <Image
+                        src={logoImageUrl}
+                        alt="Site logo preview"
+                        width={150}
+                        height={40}
+                        className="mix-blend-screen object-contain"
+                      />
+                    ) : (
+                      <div className="flex flex-col items-center gap-2 text-muted-foreground h-20 w-40 justify-center">
+                        <span>No Logo URL</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
             </Card>
         </div>
       </div>

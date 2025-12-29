@@ -4,11 +4,18 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Menu, X } from 'lucide-react';
+import { doc } from 'firebase/firestore';
+import { useFirebase, useDoc, useMemoFirebase } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from '@/components/ui/sheet';
 import { Whatsapp } from '@/components/icons/whatsapp-icon';
 import { PhoneIcon } from '@/components/icons/phone-icon';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { Skeleton } from '../ui/skeleton';
+
+type SiteProfile = {
+  logoImageUrl: string;
+};
 
 const navItems = [
   { href: '#home', label: 'Home' },
@@ -23,13 +30,28 @@ const navItems = [
 
 export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const logo = PlaceHolderImages.find(p => p.id === 'site-logo');
+  const fallbackLogo = PlaceHolderImages.find(p => p.id === 'site-logo');
+
+  const { firestore } = useFirebase();
+  const profileSettingsDoc = useMemoFirebase(
+    () => (firestore ? doc(firestore, 'settings', 'profile') : null),
+    [firestore]
+  );
+  const { data: profileSettings, isLoading } = useDoc<SiteProfile>(profileSettingsDoc);
+  
+  const logoUrl = profileSettings?.logoImageUrl || fallbackLogo?.imageUrl;
+  const logoDescription = profileSettings?.logoImageUrl ? 'Site Logo' : fallbackLogo?.description || 'Site Logo';
+
 
   return (
     <header className="sticky top-4 z-50 mx-auto w-[calc(100%-2rem)] max-w-7xl rounded-2xl border border-white/10 bg-slate-900/50 backdrop-blur-xl transition-all duration-300">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <Link href="#home" className="flex items-center gap-2 text-xl font-bold">
-          {logo && <Image src={logo.imageUrl} alt={logo.description} width={150} height={40} className="mix-blend-screen object-contain" />}
+          {isLoading ? (
+            <Skeleton className="h-10 w-36" />
+          ) : (
+            logoUrl && <Image src={logoUrl} alt={logoDescription} width={150} height={40} className="mix-blend-screen object-contain" />
+          )}
         </Link>
         <nav className="hidden items-center md:flex">
           <ul className="flex items-center space-x-6">
@@ -79,7 +101,7 @@ export function Header() {
                <SheetHeader className="flex-row items-center justify-between border-b pb-4">
                   <SheetTitle>
                     <Link href="#home" className="text-xl font-bold text-primary" onClick={() => setIsMobileMenuOpen(false)}>
-                      {logo && <Image src={logo.imageUrl} alt={logo.description} width={150} height={40} className="mix-blend-screen object-contain" />}
+                      {logoUrl && <Image src={logoUrl} alt={logoDescription} width={150} height={40} className="mix-blend-screen object-contain" />}
                     </Link>
                   </SheetTitle>
                   <SheetClose asChild>
