@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { MoreHorizontal, PlusCircle, Trash2 } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Trash2, Download } from 'lucide-react';
 import { collection, doc, addDoc, updateDoc, deleteDoc, setDoc } from 'firebase/firestore';
 import {
   useFirebase,
@@ -11,6 +11,10 @@ import {
   useMemoFirebase,
   useDoc
 } from '@/firebase';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -50,6 +54,10 @@ import { FirestorePermissionError } from '@/firebase/errors';
 import { MultiSelect, type Option } from '@/components/ui/multi-select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
+// Extend jsPDF with autoTable
+interface jsPDFWithAutoTable extends jsPDF {
+  autoTable: (options: any) => jsPDF;
+}
 
 const technologyOptions: Option[] = [
   { value: 'HTML5', label: 'HTML5' },
@@ -168,7 +176,49 @@ export default function AdminDashboard() {
       setProfileImageUrl(profileSettings.aboutImageUrl);
     }
   }, [profileSettings]);
+  
+  const formatDate = (timestamp: ContactMessage['timestamp'] | ClassInquiry['timestamp']) => {
+    if (!timestamp) return 'N/A';
+    return new Date(timestamp.seconds * 1000).toLocaleString();
+  };
 
+  const handleExportExcel = () => {
+    if (!inquiries || inquiries.length === 0) {
+      toast({
+        title: 'No Data to Export',
+        description: 'There are no class inquiries to export.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    const worksheet = XLSX.utils.json_to_sheet(
+      inquiries.map(inquiry => ({
+        Name: inquiry.name,
+        Email: inquiry.email,
+        Date: formatDate(inquiry.timestamp),
+      }))
+    );
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Class Inquiries');
+    XLSX.writeFile(workbook, 'ClassInquiries.xlsx');
+  };
+
+  const handleExportPdf = () => {
+     if (!inquiries || inquiries.length === 0) {
+      toast({
+        title: 'No Data to Export',
+        description: 'There are no class inquiries to export.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    const doc = new jsPDF() as jsPDFWithAutoTable;
+    doc.autoTable({
+      head: [['Name', 'Email', 'Date']],
+      body: inquiries.map(inquiry => [inquiry.name, inquiry.email, formatDate(inquiry.timestamp)]),
+    });
+    doc.save('ClassInquiries.pdf');
+  };
 
   const handleProfileImageSave = async () => {
     if (!profileImageUrl || !firestore) return;
@@ -373,11 +423,6 @@ export default function AdminDashboard() {
       </div>
     );
   }
-  
-  const formatDate = (timestamp: ContactMessage['timestamp'] | ClassInquiry['timestamp']) => {
-    if (!timestamp) return 'N/A';
-    return new Date(timestamp.seconds * 1000).toLocaleString();
-  };
 
   return (
     <>
@@ -593,11 +638,23 @@ export default function AdminDashboard() {
         </Card>
         
         <Card>
-          <CardHeader>
-            <CardTitle>Class Inquiries</CardTitle>
-            <CardDescription>
-              View inquiries for your web development classes.
-            </CardDescription>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div className="space-y-1">
+              <CardTitle>Class Inquiries</CardTitle>
+              <CardDescription>
+                View inquiries for your web development classes.
+              </CardDescription>
+            </div>
+             <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={handleExportExcel}>
+                    <Download className="h-4 w-4 mr-2" />
+                    Excel
+                </Button>
+                <Button size="sm" variant="outline" onClick={handleExportPdf}>
+                    <Download className="h-4 w-4 mr-2" />
+                    PDF
+                </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <ScrollArea className="h-96">
@@ -750,7 +807,7 @@ export default function AdminDashboard() {
             <DialogDescription>
               Are you sure you want to permanently delete this inquiry? This action cannot be undone.
             </DialogDescription>
-          </DialogHeader>
+          </Header>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDeleteInquiryDialogOpen(false)}>
               Cancel
