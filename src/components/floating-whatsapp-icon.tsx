@@ -21,7 +21,7 @@ export function FloatingWhatsappIcon() {
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#25D366]">
             <Whatsapp className="h-9 w-9" />
         </div>
-        <span className="max-w-0 overflow-hidden whitespace-nowrap transition-all duration-300 ease-in-out group-hover:max-w-xs pr-4">
+        <span className="max-w-0 overflow-hidden whitespace-nowrap pr-4 transition-all duration-300 ease-in-out group-hover:max-w-xs">
             Hi, Whatsapp Me
         </span>
       </Link>
