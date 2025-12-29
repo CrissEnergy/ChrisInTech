@@ -92,6 +92,16 @@ type ContactMessage = {
   } | null;
 }
 
+type ClassInquiry = {
+  id: string;
+  name: string;
+  email: string;
+  timestamp: {
+    seconds: number;
+    nanoseconds: number;
+  } | null;
+}
+
 export default function AdminDashboard() {
   const router = useRouter();
   const { toast } = useToast();
@@ -108,6 +118,13 @@ export default function AdminDashboard() {
     [firestore, user]
   );
   const { data: messages, isLoading: isLoadingMessages } = useCollection<ContactMessage>(contactMessagesCollection);
+
+  const classInquiriesCollection = useMemoFirebase(
+    () => (firestore && user ? collection(firestore, 'class_inquiries') : null),
+    [firestore, user]
+  );
+  const { data: inquiries, isLoading: isLoadingInquiries } = useCollection<ClassInquiry>(classInquiriesCollection);
+
 
   const profileSettingsDoc = useMemoFirebase(
     () => (firestore ? doc(firestore, 'settings', 'profile') : null),
@@ -127,6 +144,9 @@ export default function AdminDashboard() {
   
   const [messageToDelete, setMessageToDelete] = useState<ContactMessage | null>(null);
   const [isDeleteMessageDialogOpen, setIsDeleteMessageDialogOpen] = useState(false);
+
+  const [inquiryToDelete, setInquiryToDelete] = useState<ClassInquiry | null>(null);
+  const [isDeleteInquiryDialogOpen, setIsDeleteInquiryDialogOpen] = useState(false);
 
 
   useEffect(() => {
@@ -320,6 +340,32 @@ export default function AdminDashboard() {
     }
   };
 
+  const openDeleteInquiryDialog = (inquiry: ClassInquiry) => {
+    setInquiryToDelete(inquiry);
+    setIsDeleteInquiryDialogOpen(true);
+  };
+
+  const handleDeleteInquiry = () => {
+    if (inquiryToDelete && firestore) {
+      const inquiryRef = doc(firestore, 'class_inquiries', inquiryToDelete.id);
+      deleteDoc(inquiryRef)
+        .then(() => {
+          toast({ title: 'Inquiry Deleted', description: 'The inquiry has been removed.', variant: 'destructive' });
+          setIsDeleteInquiryDialogOpen(false);
+          setInquiryToDelete(null);
+        })
+        .catch(error => {
+          errorEmitter.emit(
+            'permission-error',
+            new FirestorePermissionError({
+              path: inquiryRef.path,
+              operation: 'delete',
+            })
+          );
+        });
+    }
+  };
+
   if (isUserLoading || !user) {
     return (
       <div className="flex min-h-dvh items-center justify-center">
@@ -328,7 +374,7 @@ export default function AdminDashboard() {
     );
   }
   
-  const formatDate = (timestamp: ContactMessage['timestamp']) => {
+  const formatDate = (timestamp: ContactMessage['timestamp'] | ClassInquiry['timestamp']) => {
     if (!timestamp) return 'N/A';
     return new Date(timestamp.seconds * 1000).toLocaleString();
   };
@@ -478,72 +524,135 @@ export default function AdminDashboard() {
         </Card>
       </div>
 
-       <Card className="mt-4">
-        <CardHeader>
-          <CardTitle>Contact Messages</CardTitle>
-          <CardDescription>
-            View messages submitted through your contact form.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ScrollArea className="h-96">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Phone</TableHead>
-                  <TableHead>Message</TableHead>
-                  <TableHead>
-                    <span className="sr-only">Actions</span>
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoadingMessages ? (
-                  Array.from({ length: 5 }).map((_, i) => (
-                    <TableRow key={i}>
-                      <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                      <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                      <TableCell><Skeleton className="h-4 w-40" /></TableCell>
-                      <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                      <TableCell><Skeleton className="h-4 w-full" /></TableCell>
-                      <TableCell><Skeleton className="h-8 w-8" /></TableCell>
-                    </TableRow>
-                  ))
-                ) : messages?.length ? (
-                  messages.map(message => (
-                    <TableRow key={message.id}>
-                      <TableCell className="font-medium whitespace-nowrap">{formatDate(message.timestamp)}</TableCell>
-                      <TableCell>{message.name}</TableCell>
-                      <TableCell>{message.email}</TableCell>
-                      <TableCell>{message.phone || 'N/A'}</TableCell>
-                      <TableCell className="max-w-md truncate">{message.message}</TableCell>
-                      <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => openDeleteMessageDialog(message)}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                          <span className="sr-only">Delete message</span>
-                        </Button>
+       <div className="grid gap-4 md:grid-cols-2 mt-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Contact Messages</CardTitle>
+            <CardDescription>
+              View messages submitted through your contact form.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea className="h-96">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Phone</TableHead>
+                    <TableHead>Message</TableHead>
+                    <TableHead>
+                      <span className="sr-only">Actions</span>
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {isLoadingMessages ? (
+                    Array.from({ length: 5 }).map((_, i) => (
+                      <TableRow key={i}>
+                        <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                        <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                        <TableCell><Skeleton className="h-4 w-40" /></TableCell>
+                        <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                        <TableCell><Skeleton className="h-4 w-full" /></TableCell>
+                        <TableCell><Skeleton className="h-8 w-8" /></TableCell>
+                      </TableRow>
+                    ))
+                  ) : messages?.length ? (
+                    messages.map(message => (
+                      <TableRow key={message.id}>
+                        <TableCell className="font-medium whitespace-nowrap">{formatDate(message.timestamp)}</TableCell>
+                        <TableCell>{message.name}</TableCell>
+                        <TableCell>{message.email}</TableCell>
+                        <TableCell>{message.phone || 'N/A'}</TableCell>
+                        <TableCell className="max-w-xs truncate">{message.message}</TableCell>
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => openDeleteMessageDialog(message)}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                            <span className="sr-only">Delete message</span>
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center">
+                        No messages received yet.
                       </TableCell>
                     </TableRow>
-                  ))
-                ) : (
+                  )}
+                </TableBody>
+              </Table>
+            </ScrollArea>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle>Class Inquiries</CardTitle>
+            <CardDescription>
+              View inquiries for your web development classes.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea className="h-96">
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center">
-                      No messages received yet.
-                    </TableCell>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>
+                      <span className="sr-only">Actions</span>
+                    </TableHead>
                   </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </ScrollArea>
-        </CardContent>
-      </Card>
+                </TableHeader>
+                <TableBody>
+                  {isLoadingInquiries ? (
+                    Array.from({ length: 5 }).map((_, i) => (
+                      <TableRow key={i}>
+                        <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                        <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                        <TableCell><Skeleton className="h-4 w-40" /></TableCell>
+                        <TableCell><Skeleton className="h-8 w-8" /></TableCell>
+                      </TableRow>
+                    ))
+                  ) : inquiries?.length ? (
+                    inquiries.map(inquiry => (
+                      <TableRow key={inquiry.id}>
+                        <TableCell className="font-medium whitespace-nowrap">{formatDate(inquiry.timestamp)}</TableCell>
+                        <TableCell>{inquiry.name}</TableCell>
+                        <TableCell>{inquiry.email}</TableCell>
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => openDeleteInquiryDialog(inquiry)}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                            <span className="sr-only">Delete inquiry</span>
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center">
+                        No class inquiries received yet.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </ScrollArea>
+          </CardContent>
+        </Card>
+      </div>
 
 
       {/* Add/Edit Project Dialog */}
@@ -627,6 +736,26 @@ export default function AdminDashboard() {
               Cancel
             </Button>
             <Button variant="destructive" onClick={handleDeleteMessage}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Inquiry Confirmation Dialog */}
+      <Dialog open={isDeleteInquiryDialogOpen} onOpenChange={setIsDeleteInquiryDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Inquiry?</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to permanently delete this inquiry? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDeleteInquiryDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteInquiry}>
               Delete
             </Button>
           </DialogFooter>

@@ -108,6 +108,20 @@ service cloud.firestore {
       allow update: if isAdmin();
       allow delete: if isAdmin();
     }
+    
+    /**
+     * @description Stores inquiries for career classes.
+     * Allows public write access for creation but restricts all read and
+     * management operations to admin users.
+     * @path /class_inquiries/{inquiryId}
+     */
+    match /class_inquiries/{inquiryId} {
+      allow get: if isAdmin();
+      allow list: if isAdmin();
+      allow create: if true;
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
 
     /**
      * @description Manages admin user roles.

@@ -81,10 +81,6 @@
       "type": "object",
       "description": "Represents a message sent through the contact form.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the contact message."
-        },
         "name": {
           "type": "string",
           "description": "Name of the sender."
@@ -112,6 +108,33 @@
         "name",
         "email",
         "message",
+        "timestamp"
+      ]
+    },
+    "ClassInquiry": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ClassInquiry",
+      "type": "object",
+      "description": "Represents an inquiry for the career online classes.",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the interested person."
+        },
+        "email": {
+          "type": "string",
+          "description": "Email address of the interested person.",
+          "format": "email"
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "Timestamp when the inquiry was sent.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "name",
+        "email",
         "timestamp"
       ]
     },
@@ -188,6 +211,22 @@
           ]
         }
       },
+       {
+        "path": "/class_inquiries/{documentId}",
+        "definition": {
+          "entityName": "ClassInquiry",
+          "schema": {
+            "$ref": "#/backend/entities/ClassInquiry"
+          },
+          "description": "Stores inquiries for career classes. Public can write, only admins can read.",
+          "params": [
+            {
+              "name": "documentId",
+              "description": "Unique identifier for the class inquiry document."
+            }
+          ]
+        }
+      },
       {
         "path": "/roles_admin/{userId}",
         "definition": {
@@ -219,5 +258,3 @@
     "reasoning": "This Firestore structure is designed for the 'Chris In Tech Portfolio' application, focusing on admin management of projects, skills, and contact messages. It prioritizes security, scalability, and debuggability by adhering to the principles of Authorization Independence, Clarity of Intent, DBAC (Database-Based Access Control), QAPs (Rules are not Filters), and Invariants.\n\n**Authorization Independence:** The structure assumes an administrative role, stored in the `roles_admin` collection, granting full access to manage projects, skills, and contact messages. This avoids hierarchical authorization dependencies by checking for the existence of the user's UID in the `roles_admin` collection. No `get()` calls are required in security rules to validate admin privileges.\n\n**Structural Segregation:** Each collection (`projects`, `skills`, `contact_messages`) is dedicated to a specific entity type, ensuring homogeneous security postures within each collection. This allows for simpler and more focused security rules.\n\n**Access Modeling:** Global roles are managed using the `roles_admin` collection. The presence of a user's UID in this collection signifies admin privileges. This approach favors Existence over Content for role validation.\n\n**Data Clarity and Predictability:** The schema uses explicit and semantic naming conventions for collections and fields. For example, `projects`, `skills`, and `contact_messages` clearly indicate the data stored in each collection.  Wildcards like `{documentId}` are used generically, indicating a unique document ID within each collection.\n\nThis structure enables robust security rules by making authorization context explicit. The absence of hierarchical dependencies ensures atomic operations and eases debugging. The clear separation of data based on entity type simplifies rule management and facilitates secure list operations."
   }
 }
-
-    
