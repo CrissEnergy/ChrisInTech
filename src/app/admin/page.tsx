@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { MoreHorizontal, PlusCircle, Trash2, Download, Eye } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Trash2, Download, Eye, ArrowUpDown } from 'lucide-react';
 import { collection, doc, addDoc, updateDoc, deleteDoc, setDoc } from 'firebase/firestore';
 import {
   useFirebase,
@@ -125,6 +125,10 @@ type ClassInquiry = {
   } | null;
 };
 
+type SortKey = keyof ContactMessage | 'date' | 'name' | 'email';
+type SortDirection = 'asc' | 'desc';
+
+
 export default function AdminDashboard() {
   const router = useRouter();
   const { toast } = useToast();
@@ -167,6 +171,11 @@ export default function AdminDashboard() {
   
   const [messageToDelete, setMessageToDelete] = useState<ContactMessage | null>(null);
   const [isDeleteMessageDialogOpen, setIsDeleteMessageDialogOpen] = useState(false);
+  const [selectedMessage, setSelectedMessage] = useState<ContactMessage | null>(null);
+  const [isViewMessageDialogOpen, setIsViewMessageDialogOpen] = useState(false);
+  const [sortKey, setSortKey] = useState<SortKey>('date');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+
 
   const [inquiryToDelete, setInquiryToDelete] = useState<ClassInquiry | null>(null);
   const [isDeleteInquiryDialogOpen, setIsDeleteInquiryDialogOpen] = useState(false);
@@ -198,6 +207,33 @@ export default function AdminDashboard() {
     if (!timestamp) return 'N/A';
     return new Date(timestamp.seconds * 1000).toLocaleString();
   };
+
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortKey(key);
+      setSortDirection('desc');
+    }
+  };
+
+  const sortedMessages = useMemo(() => {
+    if (!messages) return [];
+    return [...messages].sort((a, b) => {
+      let valA, valB;
+      if (sortKey === 'date') {
+        valA = a.timestamp?.seconds ?? 0;
+        valB = b.timestamp?.seconds ?? 0;
+      } else {
+        valA = a[sortKey as keyof ContactMessage] as string | undefined ?? '';
+        valB = b[sortKey as keyof ContactMessage] as string | undefined ?? '';
+      }
+
+      if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
+      if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [messages, sortKey, sortDirection]);
 
   const handleExportExcel = () => {
     if (!inquiries || inquiries.length === 0) {
@@ -413,6 +449,11 @@ export default function AdminDashboard() {
   const openDeleteMessageDialog = (message: ContactMessage) => {
     setMessageToDelete(message);
     setIsDeleteMessageDialogOpen(true);
+  };
+
+  const openViewMessageDialog = (message: ContactMessage) => {
+    setSelectedMessage(message);
+    setIsViewMessageDialogOpen(true);
   };
   
   const handleDeleteMessage = () => {
@@ -637,14 +678,25 @@ export default function AdminDashboard() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Phone</TableHead>
-                    <TableHead>Message</TableHead>
                     <TableHead>
-                      <span className="sr-only">Actions</span>
+                      <Button variant="ghost" onClick={() => handleSort('date')}>
+                        Date
+                        <ArrowUpDown className="ml-2 h-4 w-4" />
+                      </Button>
                     </TableHead>
+                    <TableHead>
+                      <Button variant="ghost" onClick={() => handleSort('name')}>
+                        Name
+                        <ArrowUpDown className="ml-2 h-4 w-4" />
+                      </Button>
+                    </TableHead>
+                    <TableHead>
+                      <Button variant="ghost" onClick={() => handleSort('email')}>
+                        Email
+                        <ArrowUpDown className="ml-2 h-4 w-4" />
+                      </Button>
+                    </TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -654,20 +706,27 @@ export default function AdminDashboard() {
                         <TableCell><Skeleton className="h-4 w-32" /></TableCell>
                         <TableCell><Skeleton className="h-4 w-24" /></TableCell>
                         <TableCell><Skeleton className="h-4 w-40" /></TableCell>
-                        <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                        <TableCell><Skeleton className="h-4 w-full" /></TableCell>
-                        <TableCell><Skeleton className="h-8 w-8" /></TableCell>
+                        <TableCell className="flex gap-2">
+                          <Skeleton className="h-8 w-8" />
+                          <Skeleton className="h-8 w-8" />
+                        </TableCell>
                       </TableRow>
                     ))
-                  ) : messages?.length ? (
-                    messages.map(message => (
+                  ) : sortedMessages.length ? (
+                    sortedMessages.map(message => (
                       <TableRow key={message.id}>
                         <TableCell className="font-medium whitespace-nowrap">{formatDate(message.timestamp)}</TableCell>
                         <TableCell>{message.name}</TableCell>
                         <TableCell>{message.email}</TableCell>
-                        <TableCell>{message.phone || 'N/A'}</TableCell>
-                        <TableCell className="max-w-xs truncate">{message.message}</TableCell>
-                        <TableCell>
+                        <TableCell className="flex gap-2">
+                           <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => openViewMessageDialog(message)}
+                          >
+                            <Eye className="h-4 w-4" />
+                            <span className="sr-only">View Message</span>
+                          </Button>
                           <Button
                             variant="ghost"
                             size="icon"
@@ -681,7 +740,7 @@ export default function AdminDashboard() {
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center">
+                      <TableCell colSpan={4} className="text-center">
                         No messages received yet.
                       </TableCell>
                     </TableRow>
@@ -838,6 +897,27 @@ export default function AdminDashboard() {
             </Button>
             <Button variant="destructive" onClick={handleDeleteProject}>
               Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Message Dialog */}
+      <Dialog open={isViewMessageDialogOpen} onOpenChange={setIsViewMessageDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Message from {selectedMessage?.name}</DialogTitle>
+            <DialogDescription>
+              Email: {selectedMessage?.email}
+              {selectedMessage?.phone && ` | Phone: ${selectedMessage.phone}`}
+            </DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="max-h-[50vh] pr-6">
+            <p className="py-4">{selectedMessage?.message}</p>
+          </ScrollArea>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsViewMessageDialogOpen(false)}>
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -3,6 +3,9 @@
 import { z } from 'zod';
 import { initializeFirebase } from '@/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
+
 
 const contactSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters long.' }),
@@ -71,10 +74,24 @@ export async function submitContactForm(
     const { firestore } = initializeFirebase();
     const messagesCollection = collection(firestore, 'contact_messages');
     
-    await addDoc(messagesCollection, {
+    const dataToSave = {
       ...validatedFields.data,
       timestamp: serverTimestamp(),
-    });
+    };
+
+    await addDoc(messagesCollection, dataToSave)
+      .catch((error) => {
+        errorEmitter.emit(
+          'permission-error',
+          new FirestorePermissionError({
+            path: messagesCollection.path,
+            operation: 'create',
+            requestResourceData: dataToSave,
+          })
+        );
+        // This throw is important to trigger the catch block below
+        throw error;
+      });
 
     return {
       message: 'Your message has been sent successfully!',
@@ -124,10 +141,23 @@ export async function submitClassInquiry(
   try {
     const { firestore } = initializeFirebase();
     const inquiriesCollection = collection(firestore, 'class_inquiries');
-
-    await addDoc(inquiriesCollection, {
+    
+    const dataToSave = {
       ...validatedFields.data,
       timestamp: serverTimestamp(),
+    };
+
+    await addDoc(inquiriesCollection, dataToSave)
+    .catch((error) => {
+      errorEmitter.emit(
+        'permission-error',
+        new FirestorePermissionError({
+          path: inquiriesCollection.path,
+          operation: 'create',
+          requestResourceData: dataToSave,
+        })
+      );
+      throw error;
     });
 
     return {
