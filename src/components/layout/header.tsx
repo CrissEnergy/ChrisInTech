@@ -22,6 +22,7 @@ const navItems = [
   { href: '#about', label: 'About' },
   { href: '#services', label: 'Services' },
   { href: '#classes', label: 'Classes' },
+  { href: '/downloads', label: 'Downloads' },
   { href: '#skills', label: 'Skills' },
   { href: '#projects', label: 'Projects' },
   { href: '#testimonials', label: 'Testimonials' },
@@ -136,5 +137,3 @@ export function Header() {
     </header>
   );
 }
-
-    
