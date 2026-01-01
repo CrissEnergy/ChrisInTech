@@ -1,4 +1,7 @@
-import { Download } from 'lucide-react';
+'use client';
+
+import { Download, ArrowLeft } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
@@ -39,6 +42,8 @@ const courseMaterials = [
 ];
 
 export default function DownloadsPage() {
+  const router = useRouter();
+
   return (
     <div className="flex min-h-dvh flex-col">
       <Header />
@@ -46,6 +51,10 @@ export default function DownloadsPage() {
         <section className="w-full py-24 sm:py-32">
           <AnimateOnScroll className="container mx-auto px-4 md:px-6">
             <div className="mb-12 text-center">
+               <Button variant="ghost" onClick={() => router.back()} className="mb-8">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Go Back
+              </Button>
               <h1 className="text-4xl font-bold tracking-tighter text-foreground sm:text-5xl md:text-6xl">
                 Downloads
               </h1>
