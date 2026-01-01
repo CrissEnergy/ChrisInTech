@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { Download, ArrowLeft, Plug, Braces } from 'lucide-react';
+import { Download, ArrowLeft, Plug, Braces, Palette } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { collection } from 'firebase/firestore';
 import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
@@ -18,13 +18,14 @@ type DownloadableMaterial = {
   title: string;
   description: string;
   downloadLink: string;
-  category: 'Software & Tools' | 'WordPress Plugins';
+  category: 'Software & Tools' | 'WordPress Plugins' | 'WordPress Theme';
   icon: string;
 };
 
 const categoryIcons: { [key: string]: React.ReactElement } = {
   'WordPress Plugins': <Plug className="h-10 w-10 text-primary" />,
   'Software & Tools': <Braces className="h-10 w-10 text-primary" />,
+  'WordPress Theme': <Palette className="h-10 w-10 text-primary" />,
 };
 
 export default function DownloadsPage() {
@@ -149,3 +150,5 @@ export default function DownloadsPage() {
     </div>
   );
 }
+
+    

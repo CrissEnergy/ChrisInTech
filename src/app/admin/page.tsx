@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { MoreHorizontal, PlusCircle, Trash2, Download, Eye, ArrowUpDown } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Trash2, Download, Eye, ArrowUpDown, Palette } from 'lucide-react';
 import { collection, doc, addDoc, updateDoc, deleteDoc, setDoc } from 'firebase/firestore';
 import {
   useFirebase,
@@ -132,7 +132,7 @@ type DownloadableMaterial = {
   title: string;
   description: string;
   downloadLink: string;
-  category: 'Software & Tools' | 'WordPress Plugins';
+  category: 'Software & Tools' | 'WordPress Plugins' | 'WordPress Theme';
   icon: string;
 };
 
@@ -448,14 +448,21 @@ export default function AdminDashboard() {
     setIsDownloadSubmitting(true);
     
     const formData = new FormData(e.currentTarget);
-    const category = formData.get('category') as string;
+    const category = formData.get('category') as DownloadableMaterial['category'];
+
+    let icon = 'Braces'; // Default for "Software & Tools"
+    if (category === 'WordPress Plugins') {
+      icon = 'Plug';
+    } else if (category === 'WordPress Theme') {
+      icon = 'Palette';
+    }
     
     const downloadData = {
       title: formData.get('title') as string,
       description: formData.get('description') as string,
       category: category,
       downloadLink: formData.get('downloadLink') as string,
-      icon: category === 'WordPress Plugins' ? 'Plug' : 'Braces',
+      icon: icon,
     };
 
     try {
@@ -1166,6 +1173,7 @@ export default function AdminDashboard() {
                 <SelectContent>
                   <SelectItem value="Software & Tools">Software & Tools</SelectItem>
                   <SelectItem value="WordPress Plugins">WordPress Plugins</SelectItem>
+                  <SelectItem value="WordPress Theme">WordPress Theme</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -1347,5 +1355,8 @@ export default function AdminDashboard() {
 }
 
     
+
+    
+
 
     
