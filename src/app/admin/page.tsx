@@ -54,6 +54,7 @@ import { FirestorePermissionError } from '@/firebase/errors';
 import { MultiSelect, type Option } from '@/components/ui/multi-select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 // Extend jsPDF with autoTable
 interface jsPDFWithAutoTable extends jsPDF {
@@ -126,6 +127,15 @@ type ClassInquiry = {
   } | null;
 };
 
+type DownloadableMaterial = {
+  id: string;
+  title: string;
+  description: string;
+  downloadLink: string;
+  category: 'Software & Tools' | 'WordPress Plugins';
+  icon: string;
+};
+
 type SortKey = keyof Omit<ContactMessage, 'id' | 'message' | 'phone' | 'timestamp'> | 'date';
 type SortDirection = 'asc' | 'desc';
 
@@ -153,6 +163,11 @@ export default function AdminDashboard() {
   );
   const { data: inquiries, isLoading: isLoadingInquiries } = useCollection<ClassInquiry>(classInquiriesCollection);
 
+  const downloadsCollection = useMemoFirebase(
+    () => (firestore ? collection(firestore, 'downloadable_materials') : null),
+    [firestore]
+  );
+  const { data: downloads, isLoading: isLoadingDownloads } = useCollection<DownloadableMaterial>(downloadsCollection);
 
   const profileSettingsDoc = useMemoFirebase(
     () => (firestore ? doc(firestore, 'settings', 'profile') : null),
@@ -165,12 +180,12 @@ export default function AdminDashboard() {
   const [logoImageUrl, setLogoImageUrl] = useState('');
   const [isSavingLogo, setIsSavingLogo] = useState(false);
 
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isProjectDialogOpen, setIsProjectDialogOpen] = useState(false);
+  const [isDeleteProjectDialogOpen, setIsDeleteProjectDialogOpen] = useState(false);
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
   const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
   const [selectedTechnologies, setSelectedTechnologies] = useState<string[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isProjectSubmitting, setIsProjectSubmitting] = useState(false);
   
   const [messageToDelete, setMessageToDelete] = useState<ContactMessage | null>(null);
   const [isDeleteMessageDialogOpen, setIsDeleteMessageDialogOpen] = useState(false);
@@ -185,6 +200,12 @@ export default function AdminDashboard() {
   const [selectedInquiry, setSelectedInquiry] = useState<ClassInquiry | null>(null);
   const [isViewInquiryDialogOpen, setIsViewInquiryDialogOpen] = useState(false);
 
+  const [isDownloadDialogOpen, setIsDownloadDialogOpen] = useState(false);
+  const [isDeleteDownloadDialogOpen, setIsDeleteDownloadDialogOpen] = useState(false);
+  const [currentDownload, setCurrentDownload] = useState<DownloadableMaterial | null>(null);
+  const [downloadToDelete, setDownloadToDelete] = useState<DownloadableMaterial | null>(null);
+  const [isDownloadSubmitting, setIsDownloadSubmitting] = useState(false);
+
 
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -198,7 +219,7 @@ export default function AdminDashboard() {
     } else {
       setSelectedTechnologies([]);
     }
-  }, [currentProject, isDialogOpen]);
+  }, [currentProject, isProjectDialogOpen]);
 
   useEffect(() => {
     if (profileSettings) {
@@ -375,11 +396,11 @@ export default function AdminDashboard() {
     }
   };
   
-  const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleProjectFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!firestore || isSubmitting) return;
+    if (!firestore || isProjectSubmitting) return;
 
-    setIsSubmitting(true);
+    setIsProjectSubmitting(true);
     
     const formData = new FormData(e.currentTarget);
     const liveLink = formData.get('liveLink') as string;
@@ -414,25 +435,70 @@ export default function AdminDashboard() {
         })
       );
     } finally {
-      setIsDialogOpen(false);
+      setIsProjectDialogOpen(false);
       setCurrentProject(null);
-      setIsSubmitting(false);
+      setIsProjectSubmitting(false);
     }
   };
 
-  const openAddDialog = () => {
+  const handleDownloadFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!firestore || isDownloadSubmitting) return;
+
+    setIsDownloadSubmitting(true);
+    
+    const formData = new FormData(e.currentTarget);
+    const category = formData.get('category') as string;
+    
+    const downloadData = {
+      title: formData.get('title') as string,
+      description: formData.get('description') as string,
+      category: category,
+      downloadLink: formData.get('downloadLink') as string,
+      icon: category === 'WordPress Plugins' ? 'Plug' : 'Braces',
+    };
+
+    try {
+      if (currentDownload) {
+        const downloadRef = doc(firestore, 'downloadable_materials', currentDownload.id);
+        await updateDoc(downloadRef, downloadData);
+        toast({ title: 'Material Updated', description: `${downloadData.title} has been successfully updated.` });
+      } else {
+        const downloadsColRef = collection(firestore, 'downloadable_materials');
+        await addDoc(downloadsColRef, downloadData);
+        toast({ title: 'Material Added', description: `${downloadData.title} has been successfully added.` });
+      }
+    } catch(error) {
+       const ref = currentDownload ? doc(firestore, 'downloadable_materials', currentDownload.id) : collection(firestore, 'downloadable_materials');
+       errorEmitter.emit(
+        'permission-error',
+        new FirestorePermissionError({
+          path: ref.path,
+          operation: currentDownload ? 'update' : 'create',
+          requestResourceData: downloadData,
+        })
+      );
+    } finally {
+      setIsDownloadDialogOpen(false);
+      setCurrentDownload(null);
+      setIsDownloadSubmitting(false);
+    }
+  };
+
+
+  const openAddProjectDialog = () => {
     setCurrentProject(null);
-    setIsDialogOpen(true);
+    setIsProjectDialogOpen(true);
   };
 
-  const openEditDialog = (project: Project) => {
+  const openEditProjectDialog = (project: Project) => {
     setCurrentProject(project);
-    setIsDialogOpen(true);
+    setIsProjectDialogOpen(true);
   };
 
-  const openDeleteDialog = (project: Project) => {
+  const openDeleteProjectDialog = (project: Project) => {
     setProjectToDelete(project);
-    setIsDeleteDialogOpen(true);
+    setIsDeleteProjectDialogOpen(true);
   };
 
   const handleDeleteProject = () => {
@@ -449,7 +515,7 @@ export default function AdminDashboard() {
             );
         })
         .finally(() => {
-            setIsDeleteDialogOpen(false);
+            setIsDeleteProjectDialogOpen(false);
             setProjectToDelete(null);
         });
     }
@@ -515,6 +581,41 @@ export default function AdminDashboard() {
     setIsViewInquiryDialogOpen(true);
   };
 
+  const openAddDownloadDialog = () => {
+    setCurrentDownload(null);
+    setIsDownloadDialogOpen(true);
+  };
+
+  const openEditDownloadDialog = (download: DownloadableMaterial) => {
+    setCurrentDownload(download);
+    setIsDownloadDialogOpen(true);
+  };
+
+  const openDeleteDownloadDialog = (download: DownloadableMaterial) => {
+    setDownloadToDelete(download);
+    setIsDeleteDownloadDialogOpen(true);
+  };
+
+  const handleDeleteDownload = () => {
+    if (downloadToDelete && firestore) {
+      const downloadRef = doc(firestore, 'downloadable_materials', downloadToDelete.id);
+      deleteDoc(downloadRef)
+        .catch(error => {
+          errorEmitter.emit(
+            'permission-error',
+            new FirestorePermissionError({
+              path: downloadRef.path,
+              operation: 'delete',
+            })
+          );
+        })
+        .finally(() => {
+          setIsDeleteDownloadDialogOpen(false);
+          setDownloadToDelete(null);
+        });
+    }
+  };
+
   if (isUserLoading || !user) {
     return (
       <div className="flex min-h-dvh items-center justify-center">
@@ -542,17 +643,15 @@ export default function AdminDashboard() {
                   This is your dashboard to manage your portfolio content. You can add new projects, view messages, and manage class inquiries.
                 </CardDescription>
               </CardHeader>
-              <CardFooter>
-                 <Button onClick={openAddDialog}>
-                  <PlusCircle className="h-4 w-4 mr-2" /> Add Project
-                </Button>
-              </CardFooter>
             </Card>
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle>Projects</CardTitle>
                 <CardDescription>You have {projects?.length || 0} projects on your portfolio.</CardDescription>
               </CardHeader>
+              <CardFooter>
+                 <Button onClick={openAddProjectDialog}>Add Project</Button>
+              </CardFooter>
             </Card>
             <Card>
                <CardHeader className="pb-2">
@@ -629,8 +728,8 @@ export default function AdminDashboard() {
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                <DropdownMenuItem onClick={() => openEditDialog(project)}>Edit</DropdownMenuItem>
-                                <DropdownMenuItem className="text-destructive" onClick={() => openDeleteDialog(project)}>Delete</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => openEditProjectDialog(project)}>Edit</DropdownMenuItem>
+                                <DropdownMenuItem className="text-destructive" onClick={() => openDeleteProjectDialog(project)}>Delete</DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
                             </TableCell>
@@ -814,6 +913,74 @@ export default function AdminDashboard() {
                 </ScrollArea>
               </CardContent>
             </Card>
+             <Card className="md:col-span-2">
+              <CardHeader>
+                <div className='flex items-center justify-between'>
+                  <div>
+                    <CardTitle>Download Management</CardTitle>
+                    <CardDescription>
+                      Manage course materials for the downloads page.
+                    </CardDescription>
+                  </div>
+                   <Button onClick={openAddDownloadDialog}>
+                    <PlusCircle className="h-4 w-4 mr-2" /> Add Material
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Title</TableHead>
+                      <TableHead>Category</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {isLoadingDownloads ? (
+                      Array.from({ length: 3 }).map((_, i) => (
+                        <TableRow key={i}>
+                          <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                          <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                          <TableCell><Skeleton className="h-4 w-full" /></TableCell>
+                          <TableCell><Skeleton className="h-8 w-8" /></TableCell>
+                        </TableRow>
+                      ))
+                    ) : downloads?.length ? (
+                      downloads.map(download => (
+                        <TableRow key={download.id}>
+                          <TableCell className="font-medium">{download.title}</TableCell>
+                          <TableCell><Badge variant="secondary">{download.category}</Badge></TableCell>
+                          <TableCell className="max-w-sm truncate">{download.description}</TableCell>
+                          <TableCell>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button aria-haspopup="true" size="icon" variant="ghost">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                  <span className="sr-only">Toggle menu</span>
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                <DropdownMenuItem onClick={() => openEditDownloadDialog(download)}>Edit</DropdownMenuItem>
+                                <DropdownMenuItem className="text-destructive" onClick={() => openDeleteDownloadDialog(download)}>Delete</DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={4} className="text-center">
+                          No downloadable materials found.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
           </div>
         </div>
         <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-1">
@@ -910,7 +1077,7 @@ export default function AdminDashboard() {
 
 
       {/* Add/Edit Project Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={(isOpen) => { setIsDialogOpen(isOpen); if (!isOpen) setCurrentProject(null); }}>
+      <Dialog open={isProjectDialogOpen} onOpenChange={(isOpen) => { setIsProjectDialogOpen(isOpen); if (!isOpen) setCurrentProject(null); }}>
         <DialogContent className="sm:max-w-2xl flex flex-col max-h-[90vh]">
            <DialogHeader>
               <DialogTitle>{currentProject ? 'Edit Project' : 'Add New Project'}</DialogTitle>
@@ -919,7 +1086,7 @@ export default function AdminDashboard() {
               </DialogDescription>
             </DialogHeader>
             <div className="flex-grow overflow-y-auto pr-6">
-              <form id="project-form" onSubmit={handleFormSubmit} className="grid gap-6 pl-6">
+              <form id="project-form" onSubmit={handleProjectFormSubmit} className="grid gap-6 pl-6">
                 <div className="space-y-2">
                     <Label htmlFor="title">Title</Label>
                     <Input id="title" name="title" defaultValue={currentProject?.title} required />
@@ -946,17 +1113,17 @@ export default function AdminDashboard() {
             </div>
             <DialogFooter className="pt-4 border-t">
               <DialogClose asChild>
-                <Button type="button" variant="secondary" disabled={isSubmitting}>Cancel</Button>
+                <Button type="button" variant="secondary" disabled={isProjectSubmitting}>Cancel</Button>
               </DialogClose>
-              <Button type="submit" form="project-form" disabled={isSubmitting}>
-                {isSubmitting ? 'Saving...' : (currentProject ? 'Save Changes' : 'Add Project')}
+              <Button type="submit" form="project-form" disabled={isProjectSubmitting}>
+                {isProjectSubmitting ? 'Saving...' : (currentProject ? 'Save Changes' : 'Add Project')}
               </Button>
             </DialogFooter>
         </DialogContent>
       </Dialog>
       
       {/* Delete Project Confirmation Dialog */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+      <Dialog open={isDeleteProjectDialogOpen} onOpenChange={setIsDeleteProjectDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Are you sure?</DialogTitle>
@@ -966,10 +1133,77 @@ export default function AdminDashboard() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+            <Button variant="outline" onClick={() => setIsDeleteProjectDialogOpen(false)}>
               Cancel
             </Button>
             <Button variant="destructive" onClick={handleDeleteProject}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add/Edit Download Dialog */}
+      <Dialog open={isDownloadDialogOpen} onOpenChange={(isOpen) => { setIsDownloadDialogOpen(isOpen); if (!isOpen) setCurrentDownload(null); }}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{currentDownload ? 'Edit Material' : 'Add New Material'}</DialogTitle>
+            <DialogDescription>
+              {currentDownload ? 'Update the details of this material.' : 'Fill in the details for the new downloadable material.'}
+            </DialogDescription>
+          </DialogHeader>
+          <form id="download-form" onSubmit={handleDownloadFormSubmit} className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="download-title">Title</Label>
+              <Input id="download-title" name="title" defaultValue={currentDownload?.title} required />
+            </div>
+             <div className="space-y-2">
+              <Label htmlFor="download-category">Category</Label>
+              <Select name="category" defaultValue={currentDownload?.category}>
+                <SelectTrigger id="download-category">
+                  <SelectValue placeholder="Select a category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Software & Tools">Software & Tools</SelectItem>
+                  <SelectItem value="WordPress Plugins">WordPress Plugins</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="download-description">Description</Label>
+              <Textarea id="download-description" name="description" defaultValue={currentDownload?.description} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="download-link">Download URL</Label>
+              <Input id="download-link" name="downloadLink" defaultValue={currentDownload?.downloadLink} placeholder="https://example.com/download" required />
+            </div>
+          </form>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button type="button" variant="secondary" disabled={isDownloadSubmitting}>Cancel</Button>
+            </DialogClose>
+            <Button type="submit" form="download-form" disabled={isDownloadSubmitting}>
+              {isDownloadSubmitting ? 'Saving...' : (currentDownload ? 'Save Changes' : 'Add Material')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Download Confirmation Dialog */}
+      <Dialog open={isDeleteDownloadDialogOpen} onOpenChange={setIsDeleteDownloadDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Are you sure?</DialogTitle>
+            <DialogDescription>
+              This action cannot be undone. This will permanently delete the material
+              <span className="font-semibold"> {downloadToDelete?.title}</span>.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDeleteDownloadDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteDownload}>
               Delete
             </Button>
           </DialogFooter>

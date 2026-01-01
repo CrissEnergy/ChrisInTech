@@ -123,6 +123,19 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+     /**
+     * @description Stores downloadable course materials.
+     * Publicly readable, but only admins can manage content.
+     * @path /downloadable_materials/{materialId}
+     */
+    match /downloadable_materials/{materialId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
     /**
      * @description Manages admin user roles.
      * The existence of a document here grants a user admin privileges across the app.

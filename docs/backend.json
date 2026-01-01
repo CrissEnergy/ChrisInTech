@@ -219,6 +219,42 @@
       "required": [
         "aboutImageUrl"
       ]
+    },
+     "DownloadableMaterial": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "DownloadableMaterial",
+      "type": "object",
+      "description": "Represents a downloadable course material.",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "The title of the material."
+        },
+        "description": {
+          "type": "string",
+          "description": "A short description of the material."
+        },
+        "downloadLink": {
+          "type": "string",
+          "description": "URL to the downloadable file.",
+          "format": "uri"
+        },
+        "category": {
+          "type": "string",
+          "description": "Category of the material.",
+          "enum": [ "Software & Tools", "WordPress Plugins" ]
+        },
+         "icon": {
+          "type": "string",
+          "description": "Lucide icon name for the category."
+        }
+      },
+      "required": [
+        "title",
+        "description",
+        "downloadLink",
+        "category"
+      ]
     }
   },
   "auth": {
@@ -318,6 +354,22 @@
           },
           "description": "A single document to store site-wide profile settings. Restricted to admin access.",
           "singleton": true
+        }
+      },
+       {
+        "path": "/downloadable_materials/{documentId}",
+        "definition": {
+          "entityName": "DownloadableMaterial",
+          "schema": {
+            "$ref": "#/backend/entities/DownloadableMaterial"
+          },
+          "description": "Stores downloadable course materials. Publicly readable, admin write access.",
+          "params": [
+            {
+              "name": "documentId",
+              "description": "Unique identifier for the downloadable material."
+            }
+          ]
         }
       }
     ],
