@@ -1,6 +1,7 @@
 'use client';
 
-import { Download, ArrowLeft, Plug, Braces, type LucideIcon } from 'lucide-react';
+import { useMemo } from 'react';
+import { Download, ArrowLeft, Plug, Braces } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { collection } from 'firebase/firestore';
 import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
